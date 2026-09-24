@@ -11,8 +11,9 @@
       "inLanguage": "en",
       "author": {
         "@type": "Person",
-        "@id": "#lead",
+        "@id": "https://fadhlirahim.github.io/#person",
         "name": "Fadhli Rahim",
+        "url": "https://fadhlirahim.github.io/",
         "roleName": "Human research lead"
       },
       "contributor": [
