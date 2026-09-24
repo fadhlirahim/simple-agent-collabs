@@ -31,7 +31,7 @@ export function investigationPrompt(goal: Goal, item: WorkItem, board: { summary
 export function summaryPrompt(goal: Goal, board: { summary: string; posts: Post[] }) {
   return [
     `You are the note-taker for a research board. Condense all posts into a Summary the human lead can accept as-is.`,
-    `Rules: state what is established (with the post ids that support it, like R1-3), what is contested or low-confidence, and what is still open. Max 25 lines. Plain markdown, no headings above ###.`,
+    `Rules: state what is established (with the post ids that support it, like R1-3), what is contested or low-confidence, and what is still open. Max 25 lines. Plain markdown. Start directly with the content: no "Summary" heading, no headings above ###.`,
     `# Goal\n${goal.question}`,
     `# Threads\n${goal.threads.map((t) => `- ${t.id}: ${t.text}`).join("\n")}`,
     `# Current summary\n${board.summary || "(empty)"}`,

@@ -102,7 +102,7 @@ tiers:
   standard: openai/gpt-6-sol
   powerful: anthropic/claude-opus-5-5   # tiers can mix providers
 jev: { model: jev-latest, route: true, gate: true, dedupe: true, stop: true, stopThreshold: 0.85 }
-paths: [../some-repo]   # extra read-only roots for the tools
+paths: [../some-repo]   # extra read-only roots, relative to the workspace
 ```
 
 Model refs are `provider/model-id`. Tiers can mix providers. To add a provider, add one entry to

@@ -80,5 +80,6 @@ export const appendPost = (file: string, post: Post) => withBoardLock(() => writ
 export function withSummary(text: string, summary: string): string {
   const re = /(^## Summary\n)([\s\S]*?)(?=^## |\s*$(?![\s\S]))/m;
   if (!re.test(text)) return `## Summary\n\n${summary}\n\n${text}`;
-  return text.replace(re, `$1\n${summary.trim()}\n\n`);
+  // Function replacer: a "$1" in the summary (e.g. a price) must stay literal.
+  return text.replace(re, (_m, head: string) => `${head}\n${summary.trim()}\n\n`);
 }

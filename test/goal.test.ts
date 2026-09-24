@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseBoard } from "../src/board.js";
-import { openItems, parseGoal } from "../src/goal.js";
+import { activeClaims, openItems, parseGoal } from "../src/goal.js";
 
 const goal = parseGoal(`# Goal
 
@@ -40,4 +40,16 @@ test("openItems skips claimed threads and answered questions", () => {
   const items = openItems(goal, posts, "R1");
   assert.deepEqual(items.map((i) => i.ref), ["T2", "T3", "R2-1"]);
   assert.deepEqual(openItems(goal, posts, "R2").map((i) => i.ref), ["T2", "T3"]);
+});
+
+test("activeClaims drops claims that were released", () => {
+  const { posts } = parseBoard(`## Posts
+### [R1-1] CLAIM · Limits
+- Thread: T1
+### [R2-1] CLAIM · Pricing
+- Thread: T2
+### [R1-2] NOTE · abandoned T1
+- Release: T1
+`);
+  assert.deepEqual(activeClaims(posts).map((p) => p.title), ["Pricing"]);
 });

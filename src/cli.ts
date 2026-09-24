@@ -80,7 +80,7 @@ async function run(once: boolean) {
     config,
     goal,
     boardFile,
-    tools: makeTools([dir, ...config.paths]),
+    tools: makeTools([dir, ...config.paths.map((p) => resolve(dir, p))]),
     jev: buildJev(config),
     model: (tier) => resolveModel(config.tiers[tier]),
     log,

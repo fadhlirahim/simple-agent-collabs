@@ -32,5 +32,5 @@ jev:
   stop: true      # end `run` when the goal looks answered
   stopThreshold: 0.85
 
-# Read-only directories researchers may read/grep. Workspace dir is always allowed.
+# Read-only directories researchers may read/grep, relative to this file. Workspace dir is always allowed.
 paths: []

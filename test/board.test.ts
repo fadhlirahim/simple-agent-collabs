@@ -48,6 +48,11 @@ test("formatPost round-trips", () => {
   assert.deepEqual(back, { ...p, fields: { Claim: ["a b"], Evidence: ["e1", "e2"] } });
 });
 
+test("withSummary keeps dollar signs literal", () => {
+  const out = withSummary(sample, "Haiku costs $1/1M in and $5/1M out.");
+  assert.equal(parseBoard(out).summary, "Haiku costs $1/1M in and $5/1M out.");
+});
+
 test("withSummary replaces only the summary body", () => {
   const out = withSummary(sample, "New summary.");
   assert.match(out, /## Summary\n\nNew summary\.\n\n## Posts/);

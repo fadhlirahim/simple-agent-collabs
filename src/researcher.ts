@@ -2,7 +2,7 @@ import { generateText, Output, stepCountIs, type LanguageModel } from "ai";
 import { z } from "zod";
 import { appendPost, nextN, readBoard, withBoardLock, writePost, type Board, type Post } from "./board.js";
 import type { Config, Tier } from "./config.js";
-import { openItems, type Goal, type WorkItem } from "./goal.js";
+import { activeClaims, openItems, type Goal, type WorkItem } from "./goal.js";
 import { CONFIDENCE, type Decider } from "./jev.js";
 import { investigationPrompt, SYSTEM } from "./prompts.js";
 import type { Tools } from "./tools.js";
@@ -120,7 +120,7 @@ async function investigate(
 async function pickItem(ctx: Ctx, me: string, board: Board): Promise<WorkItem | undefined> {
   const candidates = openItems(ctx.goal, board.posts, me);
   if (!ctx.config.jev.dedupe) return candidates[0];
-  const claims = board.posts.filter((p) => p.type === "CLAIM").map((p) => p.title);
+  const claims = activeClaims(board.posts).map((p) => p.title);
   for (const c of candidates) {
     if (!(await ctx.jev.isDuplicate(c.text, claims))) return c;
     ctx.log(me, `skip ${c.ref}: already covered`);
