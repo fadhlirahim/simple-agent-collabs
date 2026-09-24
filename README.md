@@ -20,7 +20,7 @@ Bun runs the TypeScript directly, so there is no build step.
 ```sh
 bun install
 bun sac init my-research              # goal.md, board.md, research.yaml
-cp .env.example my-research/.env      # ANTHROPIC_API_KEY / OPENAI_API_KEY, TYPESAFE_API_KEY
+cp .env.example my-research/.env      # OPENAI_API_KEY + TYPESAFE_API_KEY (ANTHROPIC_API_KEY if you use Claude tiers)
 $EDITOR my-research/goal.md           # the question + threads T1..Tn
 bun sac run --once -d my-research     # one round first, to check keys and models
 bun sac run -d my-research            # rounds until done, capped, or Jev says the goal is answered
@@ -98,9 +98,9 @@ maxPosts: 8
 maxRounds: 6
 maxSteps: 12
 tiers:
-  fast: anthropic/claude-haiku-4-5-20251001
-  standard: openai/gpt-5
-  powerful: anthropic/claude-opus-5-5
+  fast: openai/gpt-6-luna
+  standard: openai/gpt-6-sol
+  powerful: anthropic/claude-opus-5-5   # tiers can mix providers
 jev: { model: jev-latest, route: true, gate: true, dedupe: true, stop: true, stopThreshold: 0.85 }
 paths: [../some-repo]   # extra read-only roots for the tools
 ```
