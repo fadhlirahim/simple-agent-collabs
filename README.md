@@ -120,3 +120,7 @@ test/            node:test, offline (mock model + scripted Decider)
   (Anthropic/OpenAI web search tools) is a one-line add once you want it.
 - No LLM lead. You condense the Summary; `sac summarize` only drafts it.
 - Single process. The lock is in-memory, so run one `sac run` per workspace.
+- `fetch_url` blocks private and loopback targets by resolved IP and re-checks each redirect,
+  but it does not pin the connection to the checked IP. A hostile DNS server that answers
+  differently on the second lookup (DNS rebinding) could still reach a private address. Run
+  in a sandbox if the agents will read untrusted pages on a network with internal services.
