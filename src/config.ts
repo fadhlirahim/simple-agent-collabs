@@ -24,7 +24,7 @@ export const ConfigSchema = z.object({
       stop: z.boolean().default(true),
       stopThreshold: z.number().min(0).max(1).default(0.85),
     })
-    .default({}),
+    .prefault({}),
   paths: z.array(z.string()).default([]),
 });
 

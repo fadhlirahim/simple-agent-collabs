@@ -9,6 +9,7 @@
     "declaration": false,
     "sourceMap": true,
     "skipLibCheck": true,
+    "types": ["node"],
     "resolveJsonModule": true
   },
   "include": ["src"]
