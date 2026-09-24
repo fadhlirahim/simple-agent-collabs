@@ -14,7 +14,7 @@ import { makeTools } from "../src/tools.js";
 const goal = parseGoal(`# Goal\n\nQ?\n\n## Threads\n\n- T1: one\n- T2: two\n`);
 
 const finding = (over: Record<string, unknown> = {}) =>
-  JSON.stringify({ title: "t", claim: "c", evidence: ["src/x.ts:1"], confidence: "high", next: "none", ...over });
+  JSON.stringify({ title: "t", claim: "c", evidence: ["src/x.ts:1"], confidence: "high", next: "none", question: null, ...over });
 
 const usage = { inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 5, text: 5, reasoning: 0 } };
 const reply = (text: string) => ({ content: [{ type: "text" as const, text }], finishReason: { unified: "stop" as const, raw: "stop" }, usage, warnings: [] });

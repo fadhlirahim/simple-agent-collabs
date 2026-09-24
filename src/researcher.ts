@@ -23,10 +23,11 @@ const FindingSchema = z.object({
   evidence: z.array(z.string()).min(1).max(4).describe("file:line, URL, or quoted command output. Max 4."),
   confidence: z.enum(CONFIDENCE),
   next: z.string().describe("Open question this raises, or 'none'"),
+  // Nullable, not optional: OpenAI strict mode requires every property to be present.
   question: z
     .object({ to: z.string().describe("@R2, @Lead, or @ANY"), text: z.string() })
-    .optional()
-    .describe("Only if you need another researcher or the human lead to answer something"),
+    .nullable()
+    .describe("null unless you need another researcher or the human lead to answer something"),
 });
 
 export type TickResult = "posted" | "idle" | "capped" | "error";
