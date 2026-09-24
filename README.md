@@ -219,3 +219,7 @@ test/            node:test, offline (mock model + scripted Decider)
   but it does not pin the connection to the checked IP. A hostile DNS server that answers
   differently on the second lookup (DNS rebinding) could still reach a private address. Run
   in a sandbox if the agents will read untrusted pages on a network with internal services.
+
+## License
+
+[MIT](LICENSE)
