@@ -76,11 +76,13 @@ async function run(once: boolean) {
   loadEnv();
   const config = loadConfig(dir);
   const goal = loadGoal(join(dir, "goal.md"));
+  const roots = [dir, ...config.paths.map((p) => resolve(dir, p))];
   const ctx: Ctx = {
     config,
     goal,
     boardFile,
-    tools: makeTools([dir, ...config.paths.map((p) => resolve(dir, p))]),
+    roots,
+    tools: makeTools(roots),
     jev: buildJev(config),
     model: (tier) => resolveModel(config.tiers[tier]),
     log,

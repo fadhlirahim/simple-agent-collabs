@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MockLanguageModelV3 } from "ai/test";
@@ -23,8 +23,10 @@ async function setup(model: MockLanguageModelV3, jev: Decider = passthrough) {
   const dir = await mkdtemp(join(tmpdir(), "sac-"));
   const boardFile = join(dir, "board.md");
   await writeFile(boardFile, "# Board\n\n## Summary\n\n## Posts\n");
+  await mkdir(join(dir, "src"));
+  await writeFile(join(dir, "src", "x.ts"), "export const x = 1;\n");
   const config = ConfigSchema.parse({ tiers: { fast: "x/a", standard: "x/b", powerful: "x/c" }, maxSteps: 2 });
-  const ctx: Ctx = { config, goal, boardFile, tools: makeTools([dir]), jev, model: () => model, log: () => {} };
+  const ctx: Ctx = { config, goal, boardFile, roots: [dir], tools: makeTools([dir]), jev, model: () => model, log: () => {} };
   return { ctx, boardFile, board: async () => parseBoard(await readFile(boardFile, "utf8")) };
 }
 
@@ -41,7 +43,10 @@ test("gate rejects once, retry lands with Jev's confidence", async () => {
   let calls = 0;
   const jev: Decider = {
     ...passthrough,
-    gateFinding: async () => (++calls === 1 ? { ok: false, reasons: ["no checkable reference in evidence"], confidence: "low" } : { ok: true, reasons: [], confidence: "medium" }),
+    gateFinding: async () =>
+      ++calls === 1
+        ? { ok: false, reasons: ["the cited sources do not support the claim as stated"], confidence: "low", review: [] }
+        : { ok: true, reasons: [], confidence: "medium", review: [] },
   };
   const model = new MockLanguageModelV3({ doGenerate: async () => reply(finding({ confidence: "high" })) });
   const { ctx, board } = await setup(model, jev);
@@ -74,4 +79,16 @@ test("blocked item is released and asks for help", async () => {
   assert.deepEqual(b.posts.find((p) => p.type === "NOTE")!.fields.Release, ["T1"]);
   assert.equal(b.posts.find((p) => p.type === "QUESTION")!.fields.Q![0], "Who can do T2?");
   assert.deepEqual(openItems(goal, b.posts, "R2").map((i) => i.ref), ["T1", "T2", "R1-3"]);
+});
+
+test("a cited line that does not exist is rejected before Jev runs", async () => {
+  let jevCalls = 0;
+  const jev: Decider = { ...passthrough, gateFinding: async (f) => (jevCalls++, passthrough.gateFinding(f, [])) };
+  const model = new MockLanguageModelV3({ doGenerate: async () => reply(finding({ evidence: ["src/x.ts:40"] })) });
+  const { ctx, board } = await setup(model, jev);
+  assert.equal(await tick(ctx, "R1"), "posted");
+  assert.equal(model.doGenerateCalls.length, 2);
+  assert.equal(jevCalls, 0);
+  const f = (await board()).posts.find((p) => p.type === "FINDING")!;
+  assert.match(f.fields.Gate![0], /reference not found: src\/x\.ts:40 \(file has 2 lines\)/);
 });

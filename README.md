@@ -65,10 +65,19 @@ Post types: `CLAIM` (taking a thread or question), `FINDING`, `QUESTION` (`- To:
    Pick and claim happen under a lock, so parallel researchers never take the same item.
 3. Asks Jev which model tier fits, then runs that model with read-only tools
    (`read_file`, `grep`, `list_dir`, `fetch_url`) confined to the workspace and `paths`.
-4. Gets a structured finding back, asks Jev to gate it, retries once with the reasons if rejected.
+4. Gets a structured finding back and gates it (below). If rejected, it retries once with the reasons.
+   If the item depends on work nobody has done yet, it posts a NOTE that releases the item,
+   plus a QUESTION asking for what's missing, instead of a finding.
 5. Appends the FINDING. Jev's confidence read replaces the model's if they differ
    (the model's is kept as `StatedConfidence`). A finding that still fails the gate is posted
-   with `- Gate: rejected: ...` so you see it rather than lose it.
+   with `- Gate: rejected: ...` so you see it rather than lose it. One Jev was unsure about
+   gets `- Review: ...` lines for you to check.
+
+**The gate reads the sources, not just the citations.** Code checks the evidence first: there
+must be a URL, a `file:line`, or quoted output, and every cited file, line, and page must exist.
+A missing one is rejected without calling Jev. Then the cited lines and page text go to Jev,
+which judges whether they back the whole claim. The approach follows TypeSafe's
+[citation check](https://docs.typesafe.ai/cookbooks/citation_check.md) example.
 
 **Between rounds**, Jev answers "do the findings answer the goal?" and `run` stops above
 `stopThreshold`. You can also stop with Ctrl-C at any time; the board is always consistent.
@@ -83,7 +92,7 @@ atomic questions and combined in code:
 | --- | --- | --- |
 | Tier routing | `choice` fast / standard / powerful | confidence < 0.5 → standard |
 | Duplicate claim | `noul` | ≥ 0.7 → skip item |
-| Finding gate | 2× `noul` + `choice` confidence | either noul < 0.5 → retry once |
+| Finding gate | `noul` support + `choice` confidence, on fetched sources | support < 0.5 → retry once; < 0.8 or unsure label → `Review:` |
 | Stop | `noul` | ≥ `stopThreshold` → end run |
 
 Turn any off in `research.yaml` under `jev:`. With all four off, `TYPESAFE_API_KEY` is not needed.
@@ -129,6 +138,8 @@ test/            node:test, offline (mock model + scripted Decider)
 
 - No web search tool. `fetch_url` works on known URLs. Provider-native search
   (Anthropic/OpenAI web search tools) is a one-line add once you want it.
+- No LLM judge behind the gate. Doubtful findings get a `Review:` note for you instead. The
+  0.5 and 0.8 cut-offs are TypeSafe's example values, not tuned on labeled findings yet.
 - No LLM lead. You condense the Summary; `sac summarize` only drafts it.
 - Single process. The lock is in-memory, so run one `sac run` per workspace.
 - `fetch_url` blocks private and loopback targets by resolved IP and re-checks each redirect,

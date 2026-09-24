@@ -1,5 +1,6 @@
 import { choice, noul, TypeSafeClient } from "@typesafe-ai/sdk";
 import type { Tier } from "./config.js";
+import type { Source } from "./evidence.js";
 
 export const CONFIDENCE = ["high", "medium", "low"] as const;
 export type Confidence = (typeof CONFIDENCE)[number];
@@ -13,16 +14,23 @@ export interface FindingDraft {
 
 export interface Gate {
   ok: boolean;
+  /** Why it was rejected. Sent back to the researcher for one retry. */
   reasons: string[];
-  /** Jev's own read of how well the evidence supports the claim. */
+  /** Jev's read of how well the sources support the claim. */
   confidence: Confidence;
+  /** Passed, but a human should look. Posted as `Review:` lines. */
+  review: string[];
 }
+
+const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
+export const lowerOf = (a: Confidence, b: Confidence) => (RANK[a] <= RANK[b] ? a : b);
 
 /** Fast typed decisions. One Jev call per method; questions are atomic and combined in code. */
 export interface Decider {
   routeTier(goal: string, item: string): Promise<Tier>;
   isDuplicate(candidate: string, claims: string[]): Promise<boolean>;
-  gateFinding(f: FindingDraft): Promise<Gate>;
+  /** Judges the claim against source passages already read by `checkEvidence`. */
+  gateFinding(f: FindingDraft, sources: Source[]): Promise<Gate>;
   goalAnswered(goal: string, summary: string, findings: string[]): Promise<number>;
 }
 
@@ -32,12 +40,19 @@ export interface JevOptions {
   minRouteConfidence?: number;
   /** Probability above which a work item counts as already claimed. */
   duplicateThreshold?: number;
+  /** Support below this rejects the finding. */
+  rejectBelow?: number;
+  /** Support or label certainty below this passes with a review note. */
+  sureAt?: number;
 }
 
 export function createJev(client: TypeSafeClient, opts: JevOptions = {}): Decider {
   const model = opts.model ?? "jev-latest";
   const minRoute = opts.minRouteConfidence ?? 0.5;
   const dupThreshold = opts.duplicateThreshold ?? 0.7;
+  // 0.5 / 0.8 come from TypeSafe's citation-check example; not yet tuned on labeled findings.
+  const rejectBelow = opts.rejectBelow ?? 0.5;
+  const sureAt = opts.sureAt ?? 0.8;
 
   return {
     async routeTier(goal, item) {
@@ -67,24 +82,34 @@ export function createJev(client: TypeSafeClient, opts: JevOptions = {}): Decide
       return answers.dup.noul >= dupThreshold;
     },
 
-    async gateFinding(f) {
+    async gateFinding(f, sources) {
       const { answers } = await client.systemOne({
         model,
-        state: { claim: f.claim, evidence: f.evidence, statedConfidence: f.confidence },
+        state: { claim: f.claim, sources: sources.map((s) => ({ ref: s.ref, passage: s.text })) },
         questions: {
-          concrete: noul("At least one evidence item is a checkable reference: a file path with line, a URL, or quoted command output"),
-          supports: noul("The evidence directly supports the claim as stated, not a weaker or different claim"),
-          confidence: choice("How well does the evidence support the claim", {
-            high: "Directly shown by a primary source",
-            medium: "Supported but with a gap, inference, or secondary source",
-            low: "Weakly supported, speculative, or contradicted",
+          supports: noul(
+            "The source passages establish every material part of the claim, including its scope and qualifications. No if the passages say less than the claim or contradict any part of it.",
+          ),
+          confidence: choice("Which description matches how well the source passages support the whole claim", {
+            high: "The passages directly establish every material part of the claim, from a primary source",
+            medium: "The passages support the claim but need a stated inference, or come from a secondary source",
+            low: "A material part of the claim is unsupported, speculative, or contradicted",
           }),
         },
       });
-      const reasons: string[] = [];
-      if (answers.concrete.noul < 0.5) reasons.push("no checkable reference in evidence");
-      if (answers.supports.noul < 0.5) reasons.push("evidence does not support the claim as stated");
-      return { ok: reasons.length === 0, reasons, confidence: answers.confidence.choice };
+      const support = answers.supports.noul;
+      const label = answers.confidence;
+      const review: string[] = [];
+      if (support < rejectBelow) {
+        return { ok: false, reasons: ["the cited sources do not support the claim as stated"], confidence: "low", review };
+      }
+      if (support < sureAt) review.push(`gate unsure the sources support the claim (${support.toFixed(2)})`);
+      let confidence = label.choice;
+      if (label.confidence < sureAt) {
+        confidence = lowerOf(label.choice, f.confidence);
+        review.push(`gate unsure of the confidence level (${label.confidence.toFixed(2)})`);
+      }
+      return { ok: true, reasons: [], confidence, review };
     },
 
     async goalAnswered(goal, summary, findings) {
@@ -105,6 +130,6 @@ export function createJev(client: TypeSafeClient, opts: JevOptions = {}): Decide
 export const passthrough: Decider = {
   routeTier: async () => "standard",
   isDuplicate: async () => false,
-  gateFinding: async (f) => ({ ok: true, reasons: [], confidence: f.confidence }),
+  gateFinding: async (f) => ({ ok: true, reasons: [], confidence: f.confidence, review: [] }),
   goalAnswered: async () => 0,
 };

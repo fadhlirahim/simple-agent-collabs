@@ -10,11 +10,11 @@ import { z } from "zod";
 const run = promisify(execFile);
 const MAX_CHARS = 20_000;
 
-/** Read-only tools confined to `roots`. */
-export function makeTools(roots: string[]) {
+/** Returns a checker that resolves a path and throws if it is outside `roots`. */
+export function makeGuard(roots: string[]) {
   const allowed = roots.map((r) => resolve(r));
   // Resolve symlinks so a link inside a root cannot point outside it.
-  const guard = async (p: string) => {
+  return async (p: string) => {
     const abs = await realpath(resolve(p)).catch(() => resolve(p));
     const realRoots = await Promise.all(allowed.map((r) => realpath(r).catch(() => r)));
     if (!realRoots.some((r) => abs === r || abs.startsWith(r + sep))) {
@@ -22,6 +22,32 @@ export function makeTools(roots: string[]) {
     }
     return abs;
   };
+}
+
+export type PageResult = { ok: true; text: string } | { ok: false; status?: number; reason: string };
+
+/** Fetch a public page as plain text (HTML tags stripped). */
+export async function fetchText(url: string): Promise<PageResult> {
+  let res: Response | string;
+  try {
+    res = await fetchPublic(url);
+  } catch (e: any) {
+    return { ok: false, reason: `fetch failed: ${e.message}` };
+  }
+  if (typeof res === "string") return { ok: false, reason: res };
+  if (!res.ok) return { ok: false, status: res.status, reason: `HTTP ${res.status}` };
+  const text = (await res.text())
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n");
+  return { ok: true, text: text.trim() };
+}
+
+/** Read-only tools confined to `roots`. */
+export function makeTools(roots: string[]) {
+  const guard = makeGuard(roots);
   const clip = (s: string) => (s.length > MAX_CHARS ? s.slice(0, MAX_CHARS) + "\n…[truncated]" : s);
 
   return {
@@ -70,17 +96,8 @@ export function makeTools(roots: string[]) {
       description: "Fetch a public URL and return its text content (HTML tags stripped).",
       inputSchema: z.object({ url: z.string().url() }),
       execute: async ({ url }) => {
-        const res = await fetchPublic(url);
-        if (typeof res === "string") return res;
-        if (!res.ok) return `HTTP ${res.status} for ${url}`;
-        const text = await res.text();
-        const stripped = text
-          .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/&nbsp;|&#160;/g, " ")
-          .replace(/[ \t]+/g, " ")
-          .replace(/\n\s*\n+/g, "\n");
-        return clip(stripped.trim());
+        const page = await fetchText(url);
+        return page.ok ? clip(page.text) : `${page.reason} for ${url}`;
       },
     }),
   };

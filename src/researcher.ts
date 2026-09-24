@@ -3,7 +3,8 @@ import { z } from "zod";
 import { appendPost, nextN, readBoard, withBoardLock, writePost, type Board, type Post } from "./board.js";
 import type { Config, Tier } from "./config.js";
 import { activeClaims, openItems, type Goal, type WorkItem } from "./goal.js";
-import { CONFIDENCE, type Decider } from "./jev.js";
+import { checkEvidence } from "./evidence.js";
+import { CONFIDENCE, lowerOf, type Decider, type FindingDraft, type Gate } from "./jev.js";
 import { investigationPrompt, SYSTEM } from "./prompts.js";
 import type { Tools } from "./tools.js";
 
@@ -13,6 +14,8 @@ export interface Ctx {
   boardFile: string;
   tools: Tools;
   jev: Decider;
+  /** Directories the tools and the evidence check may read. */
+  roots: string[];
   model: (tier: Tier) => LanguageModel;
   log: (who: string, msg: string) => void;
 }
@@ -99,7 +102,7 @@ async function investigate(
       return "posted";
     }
 
-    const gate = config.jev.gate ? await jev.gateFinding(output) : { ok: true, reasons: [], confidence: output.confidence };
+    const gate: Gate = config.jev.gate ? await runGate(ctx, output) : { ok: true, reasons: [], confidence: output.confidence, review: [] };
     const tokens = `${totalUsage.inputTokens ?? 0}in/${totalUsage.outputTokens ?? 0}out`;
 
     if (!gate.ok && attempt === 1) {
@@ -117,8 +120,10 @@ async function investigate(
     };
     if (gate.confidence !== output.confidence) fields.StatedConfidence = [output.confidence];
     if (!gate.ok) fields.Gate = [`rejected: ${gate.reasons.join("; ")}`];
+    if (gate.review.length) fields.Review = gate.review;
     await post("FINDING", output.title, fields);
-    log(me, `FINDING ${item.ref} [${gate.confidence}${gate.ok ? "" : ", gate-rejected"}] ${tokens}`);
+    const flag = !gate.ok ? ", gate-rejected" : gate.review.length ? ", needs review" : "";
+    log(me, `FINDING ${item.ref} [${gate.confidence}${flag}] ${tokens}`);
 
     if (output.question) {
       await post("QUESTION", output.question.text.slice(0, 80), { To: [output.question.to], Q: [output.question.text] });
@@ -126,6 +131,20 @@ async function investigate(
     return "posted";
   }
   return "posted";
+}
+
+/** Code checks the references exist, then Jev judges the claim against what they say. */
+async function runGate(ctx: Ctx, f: FindingDraft): Promise<Gate> {
+  const ev = await checkEvidence(f.evidence, ctx.roots);
+  const reject = (reasons: string[]): Gate => ({ ok: false, reasons, confidence: "low", review: [] });
+  if (!ev.hasReference) return reject(["no checkable reference: add a URL, a file:line, or quoted command output"]);
+  if (ev.missing.length) return reject(ev.missing.map((m) => `reference not found: ${m}`));
+  const unverified = ev.unverified.map((u) => `could not read ${u}`);
+  if (ev.sources.length === 0) {
+    return { ok: true, reasons: [], confidence: lowerOf(f.confidence, "medium"), review: [...unverified, "no source could be read, so the claim was not checked"] };
+  }
+  const g = await ctx.jev.gateFinding(f, ev.sources);
+  return { ...g, review: [...unverified, ...g.review] };
 }
 
 async function pickItem(ctx: Ctx, me: string, board: Board): Promise<WorkItem | undefined> {
