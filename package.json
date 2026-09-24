@@ -1,0 +1,32 @@
+{
+  "name": "simple-agent-collabs",
+  "version": "0.1.0",
+  "description": "File-based human + multi-agent research loop. Any LLM via AI SDK, Jev for fast typed decisions.",
+  "type": "module",
+  "bin": {
+    "sac": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.62",
+    "@ai-sdk/openai": "^4.0.74",
+    "@typesafe-ai/sdk": "^0.6.0",
+    "ai": "^7.0.113",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
