@@ -1,4 +1,4 @@
-import { choice, noul, TypeSafeClient } from "@typesafe-ai/sdk";
+import { choice, noul, TypeSafeClient, type Usage } from "@typesafe-ai/sdk";
 import type { Tier } from "./config.js";
 import type { Source } from "./evidence.js";
 
@@ -44,10 +44,19 @@ export interface JevOptions {
   rejectBelow?: number;
   /** Support or label certainty below this passes with a review note. */
   sureAt?: number;
+  /** Called with the token usage of every Jev request. */
+  onUsage?: (usage: Usage) => void;
 }
 
-export function createJev(client: TypeSafeClient, opts: JevOptions = {}): Decider {
+export function createJev(api: TypeSafeClient, opts: JevOptions = {}): Decider {
   const model = opts.model ?? "jev-latest";
+  const client = {
+    systemOne: (async (req: Parameters<TypeSafeClient["systemOne"]>[0]) => {
+      const res = await api.systemOne(req);
+      opts.onUsage?.(res.usage);
+      return res;
+    }) as TypeSafeClient["systemOne"],
+  };
   const minRoute = opts.minRouteConfidence ?? 0.5;
   const dupThreshold = opts.duplicateThreshold ?? 0.7;
   // 0.5 / 0.8 come from TypeSafe's citation-check example; not yet tuned on labeled findings.

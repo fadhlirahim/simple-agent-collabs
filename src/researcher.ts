@@ -3,8 +3,8 @@ import { z } from "zod";
 import { appendPost, nextN, readBoard, withBoardLock, writePost, type Board, type Post } from "./board.js";
 import type { Config, Tier } from "./config.js";
 import { activeClaims, openItems, type Goal, type WorkItem } from "./goal.js";
-import { checkEvidence } from "./evidence.js";
-import { CONFIDENCE, lowerOf, type Decider, type FindingDraft, type Gate } from "./jev.js";
+import { checkFinding } from "./gate.js";
+import { CONFIDENCE, type Decider, type Gate } from "./jev.js";
 import { investigationPrompt, SYSTEM } from "./prompts.js";
 import type { Tools } from "./tools.js";
 
@@ -102,7 +102,7 @@ async function investigate(
       return "posted";
     }
 
-    const gate: Gate = config.jev.gate ? await runGate(ctx, output) : { ok: true, reasons: [], confidence: output.confidence, review: [] };
+    const gate: Gate = config.jev.gate ? await checkFinding(output, ctx.roots, jev.gateFinding) : { ok: true, reasons: [], confidence: output.confidence, review: [] };
     const tokens = `${totalUsage.inputTokens ?? 0}in/${totalUsage.outputTokens ?? 0}out`;
 
     if (!gate.ok && attempt === 1) {
@@ -131,20 +131,6 @@ async function investigate(
     return "posted";
   }
   return "posted";
-}
-
-/** Code checks the references exist, then Jev judges the claim against what they say. */
-async function runGate(ctx: Ctx, f: FindingDraft): Promise<Gate> {
-  const ev = await checkEvidence(f.evidence, ctx.roots);
-  const reject = (reasons: string[]): Gate => ({ ok: false, reasons, confidence: "low", review: [] });
-  if (!ev.hasReference) return reject(["no checkable reference: add a URL, a file:line, or quoted command output"]);
-  if (ev.missing.length) return reject(ev.missing.map((m) => `reference not found: ${m}`));
-  const unverified = ev.unverified.map((u) => `could not read ${u}`);
-  if (ev.sources.length === 0) {
-    return { ok: true, reasons: [], confidence: lowerOf(f.confidence, "medium"), review: [...unverified, "no source could be read, so the claim was not checked"] };
-  }
-  const g = await ctx.jev.gateFinding(f, ev.sources);
-  return { ...g, review: [...unverified, ...g.review] };
 }
 
 async function pickItem(ctx: Ctx, me: string, board: Board): Promise<WorkItem | undefined> {
