@@ -46,10 +46,18 @@ export interface WorkItem {
   text: string;
 }
 
-/** Threads nobody has claimed, then questions addressed to `me` or ANY that have no reply. */
+/**
+ * Threads nobody has claimed, then questions addressed to `me` or ANY that have no reply.
+ * A `Release: <ref>` field (posted when an investigation fails) reopens the item.
+ */
 export function openItems(goal: Goal, posts: Post[], me: string): WorkItem[] {
-  const claimed = new Set(posts.flatMap((p) => p.fields.Thread ?? []));
-  const answered = new Set(posts.flatMap((p) => p.fields.Re ?? []));
+  const taken = new Set<string>();
+  for (const p of posts) {
+    for (const r of [...(p.fields.Thread ?? []), ...(p.fields.Re ?? [])]) taken.add(r);
+    for (const r of p.fields.Release ?? []) taken.delete(r);
+  }
+  const claimed = taken;
+  const answered = taken;
   const threads = goal.threads
     .filter((t) => !claimed.has(t.id))
     .map<WorkItem>((t) => ({ kind: "thread", ref: t.id, text: t.text }));

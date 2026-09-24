@@ -64,13 +64,17 @@ export async function readBoard(file: string): Promise<Board> {
   return parseBoard(await readFile(file, "utf8"));
 }
 
-// Appends are serialized so parallel researchers never interleave writes.
+// One in-process lock: appends never interleave, and read→pick→claim is atomic across researchers.
 let queue: Promise<unknown> = Promise.resolve();
-export function appendPost(file: string, post: Post): Promise<void> {
-  const next = queue.then(() => appendFile(file, formatPost(post)));
+export function withBoardLock<T>(fn: () => Promise<T>): Promise<T> {
+  const next = queue.then(fn);
   queue = next.catch(() => {});
   return next;
 }
+
+/** Raw append. Only call this while already holding the lock. */
+export const writePost = (file: string, post: Post) => appendFile(file, formatPost(post));
+export const appendPost = (file: string, post: Post) => withBoardLock(() => writePost(file, post));
 
 /** Replace the body of `## Summary`, leaving everything else byte-identical. */
 export function withSummary(text: string, summary: string): string {
