@@ -58,44 +58,78 @@ Every post is a `###` header plus `- Key: value` lines, so `grep` and `sed` work
 Post types: `CLAIM` (taking a thread or question), `FINDING`, `QUESTION` (`- To: @R1|@Lead|@ANY`),
 `NOTE` (replies via `- Re: R2-3`, or `- Release: T1` when an investigation failed), `DONE`.
 
-**Each tick**, a researcher:
+**Each turn**, a researcher:
 
-1. Reads the board. Stops if at its post cap.
-2. Picks the first open thread, else an open question addressed to it or `@ANY`.
-   Pick and claim happen under a lock, so parallel researchers never take the same item.
-3. Asks Jev which model tier fits, then runs that model with read-only tools
-   (`read_file`, `grep`, `list_dir`, `fetch_url`) confined to the workspace and `paths`.
-4. Gets a structured finding back and gates it (below). If rejected, it retries once with the reasons.
-   If the item depends on work nobody has done yet, it posts a NOTE that releases the item,
-   plus a QUESTION asking for what's missing, instead of a finding.
-5. Appends the FINDING. Jev's confidence read replaces the model's if they differ
-   (the model's is kept as `StatedConfidence`). A finding that still fails the gate is posted
-   with `- Gate: rejected: ...` so you see it rather than lose it. One Jev was unsure about
-   gets `- Review: ...` lines for you to check.
+1. Reads the board. Stops if it has hit its post limit.
+2. Picks the first open thread, else an open question addressed to it or `@ANY`, skipping
+   anything already covered. Picking and claiming happen one researcher at a time, so two
+   researchers never take the same item.
+3. Runs the model Jev picked for the item, with read-only tools (`read_file`, `grep`,
+   `list_dir`, `fetch_url`) limited to the workspace and `paths`.
+4. Gets a finding back and checks it (see the gate below). If the check fails, it tries once more
+   with the reasons. If the item depends on work nobody has done yet, it gives the item back with
+   a NOTE and posts a QUESTION asking for what's missing.
+5. Appends the FINDING to the board.
 
-**The gate reads the sources, not just the citations.** Code checks the evidence first: there
-must be a URL, a `file:line`, or quoted output, and every cited file, line, and page must exist.
-A missing one is rejected without calling Jev. Then the cited lines and page text go to Jev,
-which judges whether they back the whole claim. The approach follows TypeSafe's
-[citation check](https://docs.typesafe.ai/cookbooks/citation_check.md) example.
+After each round, the run stops if the goal looks answered. You can also stop with Ctrl-C at any
+time. The board is always left in a readable state.
 
-**Between rounds**, Jev answers "do the findings answer the goal?" and `run` stops above
-`stopThreshold`. You can also stop with Ctrl-C at any time; the board is always consistent.
+## Where Jev fits
 
-## Where Jev sits
+The researchers never call Jev. They're LLMs, and they only use the read-only tools above. The
+program around them asks Jev four quick questions at fixed points in each turn:
 
-Jev is not an LLM. It takes state and typed questions and returns probabilities in ~100ms for
-$0.042 per million input tokens. Here it makes four decisions, each one call, each batched into
-atomic questions and combined in code:
+```
+pick an item ───► Jev: is this already taken?                  (1)
+      │
+      ▼
+choose a model ─► Jev: fast, standard, or powerful?            (2)
+      │
+      ▼
+LLM researches, using tools only
+      │
+      ▼
+check the finding ─► code: do the cited files and pages exist?
+                  └► Jev: do those sources back the claim?     (3)
+      │
+      ▼
+post to the board
 
-| Decision | Question type | Fallback |
-| --- | --- | --- |
-| Tier routing | `choice` fast / standard / powerful | confidence < 0.5 → standard |
-| Duplicate claim | `noul` | ≥ 0.7 → skip item |
-| Finding gate | `noul` support + `choice` confidence, on fetched sources | support < 0.5 → retry once; < 0.8 or unsure label → `Review:` |
-| Stop | `noul` | ≥ `stopThreshold` → end run |
+after each round ─► Jev: is the goal answered yet?             (4)
+```
 
-Turn any off in `research.yaml` under `jev:`. With all four off, `TYPESAFE_API_KEY` is not needed.
+1. **Is it taken?** Jev compares the item with what others have already claimed, and the
+   researcher skips it if it's likely covered.
+2. **Which model?** Jev reads the item and picks a tier. A lookup goes to the cheap model,
+   combining findings into a recommendation goes to the strongest. If Jev is unsure, it uses the
+   middle tier.
+3. **Does the evidence hold up?** Code checks first. There must be a URL, a `file:line`, or
+   quoted output, and every cited file, line, and page must exist. A made-up reference fails here
+   without asking Jev. Then the cited lines and page text go to Jev, which says whether they back
+   the whole claim and how strongly: high, medium, or low. This follows TypeSafe's
+   [citation check](https://docs.typesafe.ai/cookbooks/citation_check.md) example.
+4. **Are we done?** Jev reads all the findings and says how likely it is that the goal is answered.
+
+**Why Jev and not an LLM for these.** Each is a yes-or-no or pick-one question. Jev answers in
+about a tenth of a second, costs $0.042 per million input tokens, and can only answer with one of
+the options it was given. The LLM calls are saved for the research itself.
+
+Jev answers with probabilities, and the program turns them into actions:
+
+| Question | What happens |
+| --- | --- |
+| Is it taken? | 70% or more likely: skip the item |
+| Which model? | Jev less than 50% sure: use the standard tier |
+| Does the evidence hold up? | Support under 50%: reject and retry once. Under 80%, or Jev unsure how strong: post with a `Review:` note for you |
+| Are we done? | At or above `stopThreshold` (default 85%): end the run |
+
+Jev's strength rating replaces the researcher's own when they differ. The researcher's is kept
+as `StatedConfidence`. A finding that fails the check twice is still posted, with
+`Gate: rejected`, so you see it rather than lose it.
+
+Switch any of the four off in `research.yaml` under `jev:`. The program then skips nothing, uses
+the standard tier, posts findings unchecked, and runs every round. With all four off, you don't
+need `TYPESAFE_API_KEY`.
 
 ## Configuration
 
@@ -122,7 +156,7 @@ Model refs are `provider/model-id`. Tiers can mix providers. To add a provider, 
 ```
 src/
   cli.ts         init · run · summarize · status
-  researcher.ts  one tick: pick, claim, investigate, gate, post
+  researcher.ts  one turn: pick, claim, investigate, check, post
   jev.ts         Decider interface + Jev implementation + passthrough
   board.ts       parse/format posts, locked appends, Summary replace
   goal.ts        parse goal.md, compute open work items
