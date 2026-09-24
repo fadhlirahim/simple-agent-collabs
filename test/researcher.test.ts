@@ -14,7 +14,7 @@ import { makeTools } from "../src/tools.js";
 const goal = parseGoal(`# Goal\n\nQ?\n\n## Threads\n\n- T1: one\n- T2: two\n`);
 
 const finding = (over: Record<string, unknown> = {}) =>
-  JSON.stringify({ title: "t", claim: "c", evidence: ["src/x.ts:1"], confidence: "high", next: "none", question: null, ...over });
+  JSON.stringify({ status: "answered", title: "t", claim: "c", evidence: ["src/x.ts:1"], confidence: "high", next: "none", question: null, ...over });
 
 const usage = { inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 5, text: 5, reasoning: 0 } };
 const reply = (text: string) => ({ content: [{ type: "text" as const, text }], finishReason: { unified: "stop" as const, raw: "stop" }, usage, warnings: [] });
@@ -61,4 +61,17 @@ test("model failure releases the thread", async () => {
   const note = b.posts.find((p) => p.type === "NOTE")!;
   assert.deepEqual(note.fields.Release, ["T1"]);
   assert.deepEqual(openItems(goal, b.posts, "R2").map((i) => i.ref), ["T1", "T2"]);
+});
+
+test("blocked item is released and asks for help", async () => {
+  const model = new MockLanguageModelV3({
+    doGenerate: async () => reply(finding({ status: "blocked", claim: "needs T2 first", question: { to: "@ANY", text: "Who can do T2?" } })),
+  });
+  const { ctx, board } = await setup(model);
+  assert.equal(await tick(ctx, "R1"), "posted");
+  const b = await board();
+  assert.equal(b.posts.some((p) => p.type === "FINDING"), false);
+  assert.deepEqual(b.posts.find((p) => p.type === "NOTE")!.fields.Release, ["T1"]);
+  assert.equal(b.posts.find((p) => p.type === "QUESTION")!.fields.Q![0], "Who can do T2?");
+  assert.deepEqual(openItems(goal, b.posts, "R2").map((i) => i.ref), ["T1", "T2", "R1-3"]);
 });

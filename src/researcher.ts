@@ -18,6 +18,7 @@ export interface Ctx {
 }
 
 const FindingSchema = z.object({
+  status: z.enum(["answered", "blocked"]).describe('"blocked" if the item depends on findings not on the board yet'),
   title: z.string().max(80).describe("Short headline for the finding"),
   claim: z.string().describe("One sentence. What you found."),
   evidence: z.array(z.string()).min(1).max(4).describe("file:line, URL, or quoted command output. Max 4."),
@@ -88,6 +89,16 @@ async function investigate(
       stopWhen: stepCountIs(config.maxSteps + 1),
       output: Output.object({ schema: FindingSchema }),
     });
+    if (output.status === "blocked") {
+      // Give the item back instead of closing it with a non-answer.
+      await post("NOTE", `blocked on ${item.ref}`, { Release: [item.ref], Why: [output.claim] });
+      if (output.question) {
+        await post("QUESTION", output.question.text.slice(0, 80), { To: [output.question.to], Q: [output.question.text] });
+      }
+      log(me, `blocked on ${item.ref}, released`);
+      return "posted";
+    }
+
     const gate = config.jev.gate ? await jev.gateFinding(output) : { ok: true, reasons: [], confidence: output.confidence };
     const tokens = `${totalUsage.inputTokens ?? 0}in/${totalUsage.outputTokens ?? 0}out`;
 

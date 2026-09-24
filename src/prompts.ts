@@ -11,7 +11,8 @@ Rules:
 - Read-only. Never modify anything.
 - Be terse. The board is shared and has a size budget.
 - Mark confidence honestly: high = shown directly by a primary source; medium = supported with a gap or inference; low = speculative.
-- If you hit a question you cannot answer but another researcher or the human lead could, put it in the optional question field.`;
+- If you hit a question you cannot answer but another researcher or the human lead could, put it in the question field.
+- If the work item depends on findings that are not on the board yet, set status to "blocked", say what is missing in the claim, and ask for it in the question field. Do not guess.`;
 
 export function investigationPrompt(goal: Goal, item: WorkItem, board: { summary: string; posts: Post[] }, feedback?: string[]) {
   const recent = board.posts.slice(-12).map(formatPost).join("");

@@ -46,9 +46,9 @@ export function createJev(client: TypeSafeClient, opts: JevOptions = {}): Decide
         state: { goal, workItem: item },
         questions: {
           tier: choice("Which model tier should investigate this work item", {
-            fast: "A direct lookup, single fact check, or extracting a value from one known source",
-            standard: "Investigation across several sources, comparing options, or tracing how something works",
-            powerful: "Synthesis across many findings, architecture judgement, or an ambiguous high-stakes conclusion",
+            fast: "Collecting stated facts, numbers, or limits from documentation or code, even across a few pages, with simple arithmetic at most",
+            standard: "Explaining how something works, or comparing options where the answer needs judgement",
+            powerful: "Combining many earlier findings into a recommendation, or a design decision with trade-offs",
           }),
         },
       });
