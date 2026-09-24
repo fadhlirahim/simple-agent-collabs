@@ -15,17 +15,28 @@ goal.md  ──►  sac run  ──►  board.md  ◄──  you (human lead)
 
 ## Quick start
 
+Bun runs the TypeScript directly, so there is no build step.
+
 ```sh
-npm install && npm run build
-npx sac init my-research      # goal.md, board.md, research.yaml
-cd my-research
-$EDITOR goal.md               # the question + threads T1..Tn
-cp ../.env.example .env       # ANTHROPIC_API_KEY / OPENAI_API_KEY, TYPESAFE_API_KEY
-npx sac run                   # rounds until done, capped, or Jev says the goal is answered
-npx sac summarize --write     # draft the Summary; edit it; run again
+bun install
+bun sac init my-research              # goal.md, board.md, research.yaml
+cp .env.example my-research/.env      # ANTHROPIC_API_KEY / OPENAI_API_KEY, TYPESAFE_API_KEY
+$EDITOR my-research/goal.md           # the question + threads T1..Tn
+bun sac run --once -d my-research     # one round first, to check keys and models
+bun sac run -d my-research            # rounds until done, capped, or Jev says the goal is answered
+bun sac summarize --write -d my-research   # draft the Summary; edit it; run again
 ```
 
-`sac run --once` does a single round. `sac status` shows open threads and post counts.
+`bun sac status -d my-research` shows open threads and post counts.
+
+To get a global `sac` command instead of `bun sac ... -d dir`:
+
+```sh
+bun run build && bun link      # once, in this repo
+cd my-research && sac run      # anywhere
+```
+
+Node works too: `npm install && npm run build`, then `node dist/cli.js`. Tests run with `bun run test`.
 
 ## How it works
 
