@@ -10,15 +10,16 @@ maxSteps: 12
 # Model tiers. Jev routes each work item to one of these.
 # Format: provider/model-id. Providers: anthropic, openai.
 # Default: OpenAI only (needs OPENAI_API_KEY + TYPESAFE_API_KEY). Tiers may mix providers.
+# Prices are $/M tokens, input / output, as of 2026-09.
 tiers:
-  fast: openai/gpt-6-luna      # $0.10/M in
-  standard: openai/gpt-6-sol   # $2/M in
-  powerful: openai/gpt-6-astra # $10/M in
+  fast: openai/gpt-6-luna      # $0.10 / $0.50
+  standard: openai/gpt-6-sol   # $2 / $10
+  powerful: openai/gpt-6-astra # $10 / $50
 # Anthropic alternative (needs ANTHROPIC_API_KEY):
 # tiers:
-#   fast: anthropic/claude-haiku-4-5-20251001
-#   standard: anthropic/claude-sonnet-5
-#   powerful: anthropic/claude-opus-5-5
+#   fast: anthropic/claude-haiku-4-5    # $1 / $5
+#   standard: anthropic/claude-sonnet-5 # $2 / $10
+#   powerful: anthropic/claude-opus-5-5 # $4 / $20  (claude-opus-5 is $5 / $25)
 # Model for `sac summarize` (defaults to tiers.standard)
 # summarizer: openai/gpt-5
 
