@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev vs LLM Judge</title>
+<meta name="description" content="Research report: Jev first with an LLM second opinion beat either judge alone at gating research findings. Researched with simple-agent-collabs.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Report",
+      "@id": "#report",
+      "name": "Is Jev a better finding gate than an LLM judge?",
+      "headline": "Jev first, LLM second: gating research findings",
+      "abstract": "Jev on its own is not proven better than an LLM judge, but Jev first with an LLM second opinion beat either alone. Jev checks every finding against the fetched source text; when it is unsure, GPT-6 Luna decides. On 30 labeled findings it agreed with every label in one run, let no bad finding through, and cost $0.0012 for the set. One finding sat on the 0.5 cut-off, so the fair reading is 29 or 30 out of 30. The earlier gate, which showed Jev only the citation text, let 14 of 20 bad findings through.",
+      "datePublished": "2026-09-24",
+      "inLanguage": "en",
+      "author": {
+        "@type": "Person",
+        "@id": "#lead",
+        "name": "Fadhli Rahim",
+        "roleName": "Human research lead"
+      },
+      "contributor": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Researcher agents R1 and R2",
+          "description": "Two parallel LLM researchers (GPT-6 Luna, Sol, and Astra tiers) run by simple-agent-collabs"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Claude",
+          "description": "Built the tool, the eval set, and this report"
+        }
+      ],
+      "about": [
+        {
+          "@id": "#jev"
+        },
+        {
+          "@type": "Thing",
+          "name": "LLM-as-a-judge"
+        },
+        {
+          "@id": "#gate"
+        }
+      ],
+      "mainEntity": {
+        "@id": "#question"
+      },
+      "isBasedOn": [
+        {
+          "@id": "#eval"
+        },
+        {
+          "@id": "#tool"
+        }
+      ],
+      "citation": [
+        {
+          "@type": "CreativeWork",
+          "name": "Jev models: limits and pricing",
+          "url": "https://docs.typesafe.ai/models.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Jev 1.13 model jaggedness",
+          "url": "https://docs.typesafe.ai/model-jaggedness/jev-1.13.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Confidence",
+          "url": "https://docs.typesafe.ai/confidence.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Choice primitive",
+          "url": "https://docs.typesafe.ai/primitives/choice"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Noul primitive",
+          "url": "https://docs.typesafe.ai/primitives/noul.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Citation check cookbook",
+          "url": "https://docs.typesafe.ai/cookbooks/citation_check.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Jev for coding agents",
+          "url": "https://docs.typesafe.ai/introduction/coding-agents.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "OpenAI API pricing",
+          "url": "https://platform.openai.com/docs/pricing"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "OpenAI models",
+          "url": "https://developers.openai.com/api/docs/models"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Claude API pricing",
+          "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+        }
+      ],
+      "keywords": [
+        "Jev",
+        "TypeSafe AI",
+        "LLM as a judge",
+        "research agents",
+        "evidence gating",
+        "multi-agent research"
+      ],
+      "hasPart": [
+        {
+          "@id": "#how-it-works"
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "#how-it-works",
+      "name": "How simple-agent-collabs runs one research turn",
+      "description": "Each researcher repeats these steps in parallel with the others. Jev makes the quick decisions; code checks citations; an LLM gives a second opinion only when Jev is unsure.",
+      "tool": [
+        {
+          "@type": "HowToTool",
+          "name": "goal.md"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "board.md"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "Jev (TypeSafe AI)"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "GPT-6 researcher models"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "GPT-6 Luna as second opinion"
+        }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Pick an open thread",
+          "text": "The researcher reads the board and takes the first open thread or question. Jev checks it isn't already covered by another claim."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Claim it",
+          "text": "The claim is written to the board under a lock, so two researchers never take the same thread."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Choose a model",
+          "text": "Jev picks a tier: fast for lookups, standard for comparisons, powerful for recommendations."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Research with tools",
+          "text": "The LLM reads files, searches, and fetches pages with read-only tools. If the thread depends on unfinished work, it gives the thread back and posts a question."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 5,
+          "name": "Check the citations",
+          "text": "Code checks that every cited file, line, and page exists. A missing one is rejected without asking a model."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 6,
+          "name": "Judge the claim",
+          "text": "Jev reads the cited passages and gives the probability that they back the whole claim. Below 0.5 it is rejected; the researcher retries once with the reason."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 7,
+          "name": "Second opinion",
+          "text": "If Jev is unsure, below 0.8, an LLM reads the same passages, decides, and explains."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 8,
+          "name": "Post the finding",
+          "text": "The finding is appended to the board. After each round, Jev estimates whether the goal is answered and the run stops above 0.85."
+        }
+      ]
+    },
+    {
+      "@type": "Question",
+      "@id": "#question",
+      "name": "Is Jev a better gate for research findings than an LLM-as-judge, and what question phrasing makes Jev's gate reliable?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Jev on its own is not proven better than an LLM judge, but Jev first with an LLM second opinion beat either alone. Jev checks every finding against the fetched source text; when it is unsure, GPT-6 Luna decides. On 30 labeled findings it agreed with every label in one run, let no bad finding through, and cost $0.0012 for the set. One finding sat on the 0.5 cut-off, so the fair reading is 29 or 30 out of 30. The earlier gate, which showed Jev only the citation text, let 14 of 20 bad findings through.",
+        "dateCreated": "2026-09-24"
+      }
+    },
+    {
+      "@type": "Dataset",
+      "@id": "#eval",
+      "name": "Finding-gate eval: 30 labeled research findings",
+      "description": "10 correct findings and 20 bad ones (6 overreach, 5 wrong number, 3 contradicted, 3 unsupported, 3 fake citation), each citing frozen source files. Labels were written by Claude and have not been independently reviewed.",
+      "dateCreated": "2026-09-24",
+      "measurementTechnique": "Each judge rules pass or fail on every finding; agreement with the label, bad findings passed, cost, and time are recorded. Run 2026-09-24T07:09Z.",
+      "variableMeasured": [
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: agreement with labels",
+          "value": 14,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: agreement with labels",
+          "value": 28,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: agreement with labels",
+          "value": 27,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: agreement with labels",
+          "value": 30,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: bad findings passed",
+          "value": 14,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: bad findings passed",
+          "value": 2,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: bad findings passed",
+          "value": 1,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: bad findings passed",
+          "value": 0,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: cost for 30 findings",
+          "value": 0.00059,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: cost for 30 findings",
+          "value": 0.00067,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: cost for 30 findings",
+          "value": 0.00194,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: cost for 30 findings",
+          "value": 0.0012,
+          "unitText": "USD"
+        }
+      ]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "#tool",
+      "name": "simple-agent-collabs",
+      "description": "A file-based research loop for one human and several LLM researchers, sharing a goal file and an append-only board. Jev makes the fast decisions: duplicate checks, model routing, evidence gating, and the stop check.",
+      "programmingLanguage": "TypeScript",
+      "runtimePlatform": [
+        "Bun",
+        "Node.js"
+      ],
+      "isBasedOn": {
+        "@type": "SoftwareSourceCode",
+        "name": "huggingface/agent-collabs",
+        "codeRepository": "https://github.com/huggingface/agent-collabs"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "#jev",
+      "name": "Jev",
+      "applicationCategory": "AI decision model",
+      "softwareVersion": "1.13",
+      "description": "A System One model that returns typed decisions with probabilities instead of text.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "TypeSafe AI",
+        "url": "https://typesafe.ai"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0.042",
+        "priceCurrency": "USD",
+        "description": "Per million input tokens; output tokens are free"
+      }
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "#gate",
+      "name": "finding gate",
+      "description": "The check every research finding goes through before it is posted to the board. In simple-agent-collabs it has three steps: code checks that cited files, lines, and pages exist; Jev judges whether the cited passages back the whole claim; an LLM gives a second opinion when Jev is unsure. The original gate was one step: Jev reading only the citation text."
+    }
+  ]
+}
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fcfcfb;
+  --surface: #f3f2ef;
+  --border: #e2e0da;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-3: #75736d;
+  --accent: #2a78d6;
+  --accent-ink: #1b5fb0;
+  --accent-soft: #e6effa;
+  --good: #1f7a3a;
+  --bad: #b3261e;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1f1f1d; --border: #34332f;
+    --text: #f4f3ee; --text-2: #c3c2b7; --text-3: #9a988e;
+    --accent: #3987e5; --accent-ink: #7fb2f0; --accent-soft: #1b2a3d;
+    --good: #5cc27a; --bad: #f0827b;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1f1f1d; --border: #34332f;
+  --text: #f4f3ee; --text-2: #c3c2b7; --text-3: #9a988e;
+  --accent: #3987e5; --accent-ink: #7fb2f0; --accent-soft: #1b2a3d;
+  --good: #5cc27a; --bad: #f0827b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+main { max-width: 780px; margin: 0 auto; padding: 48px 16px 80px; }
+h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; letter-spacing: -0.02em; margin: 8px 0 16px; }
+h2 { font-size: 22px; letter-spacing: -0.01em; margin: 56px 0 12px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+p { margin: 0 0 12px; }
+a { color: var(--accent-ink); }
+code { font: 0.9em var(--mono); background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+.eyebrow { font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin: 0; }
+.lede { font-size: 19px; color: var(--text-2); }
+.byline { font-size: 14px; color: var(--text-3); }
+.muted { color: var(--text-3); font-size: 14px; }
+.ref { font: 12px var(--mono); color: var(--text-3); white-space: nowrap; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 32px 0 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.stat b { display: block; font-size: 32px; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 14px; color: var(--text-2); }
+
+.findings { list-style: none; padding: 0; margin: 0; counter-reset: f; }
+.findings li { counter-increment: f; position: relative; padding: 14px 0 14px 40px; border-top: 1px solid var(--border); }
+.findings li::before { content: counter(f); position: absolute; left: 0; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font: 600 13px/26px var(--sans); text-align: center; }
+.findings p { margin: 0; color: var(--text-2); }
+
+.chart { margin: 20px 0 8px; }
+.chart-title { font-weight: 600; margin-bottom: 12px; }
+.bar-row { display: grid; grid-template-columns: 220px 1fr; gap: 12px; align-items: center; padding: 6px 0; }
+.bar-label { font-size: 14px; color: var(--text-2); }
+.bar-row.best .bar-label { color: var(--text); font-weight: 600; }
+.track { position: relative; height: 20px; display: flex; align-items: center; cursor: default; }
+.bar { position: relative; height: 20px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.bar-value { position: relative; margin-left: 8px; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text); }
+.track:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.tip { position: fixed; pointer-events: none; background: var(--text); color: var(--bg); font-size: 13px; line-height: 1.45; padding: 8px 10px; border-radius: 6px; max-width: 260px; opacity: 0; transition: opacity .1s; z-index: 10; }
+.tip.on { opacity: 1; }
+@media (max-width: 560px) { .bar-row { grid-template-columns: 1fr; gap: 4px; } }
+
+.table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.col-best { background: var(--accent-soft); }
+
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { position: relative; padding: 0 0 28px 28px; border-left: 2px solid var(--border); margin-left: 7px; }
+.timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.timeline li::before { content: ""; position: absolute; left: -9px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.timeline li.change::before { border-style: dashed; border-color: var(--text-3); }
+.timeline .when { font-size: 13px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.timeline p { color: var(--text-2); }
+
+.diagram { margin: 28px 0; }
+.diagram svg { display: block; width: 100%; max-width: 480px; height: auto; margin: 0 auto; color: var(--text); overflow: visible; }
+.diagram figcaption { font-size: 14px; color: var(--text-2); margin: 12px auto 0; max-width: 600px; }
+.d-box { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+.d-jev { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.d-frame { fill: none; stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 5 4; }
+.d-line { fill: none; stroke: var(--text-3); stroke-width: 1.5; }
+.d-dash { stroke-dasharray: 3 3; }
+.d-head { fill: var(--text-3); }
+.d-t { fill: currentColor; font: 13px var(--sans); }
+.d-s { fill: var(--text-2); font: 11px var(--sans); }
+.d-k { fill: var(--text-3); font: 600 10px var(--sans); letter-spacing: 0.08em; }
+.d-b { font-weight: 600; }
+.d-i { font-style: italic; }
+.d-acc { fill: var(--accent-ink); }
+.d-good { fill: var(--good); }
+.d-bad { fill: var(--bad); }
+
+.helped { display: grid; gap: 16px; }
+.helped div { border-top: 1px solid var(--border); padding-top: 14px; }
+.helped p { color: var(--text-2); margin: 0; }
+
+.limits li { margin-bottom: 8px; color: var(--text-2); }
+.sources { font-size: 14px; columns: 2 260px; padding-left: 18px; }
+.sources li { margin-bottom: 6px; break-inside: avoid; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-3); }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="eyebrow">Research report · 24 September 2026</p>
+  <h1>Is Jev a better gate for research findings than an LLM judge?</h1>
+  <p class="lede">Not on its own. But Jev first, with an LLM second opinion when Jev is unsure, beat either judge alone. It judged all 30 test findings correctly, let no bad finding through, and cost about a tenth of a cent.</p>
+  <p class="byline">Led by Fadhli Rahim. Researched by two GPT-6 agents working in parallel in <a href="#helped">simple-agent-collabs</a>, over three runs.</p>
+
+  <div class="stats">
+    <div class="stat"><b>30 / 30</b><span>test findings judged correctly in our run, by Jev first, then GPT-6 Luna when Jev was unsure</span></div>
+    <div class="stat"><b>14 / 20</b><span>bad findings the old gate let through, because it only saw the citation text</span></div>
+    <div class="stat"><b>$0.0012</b><span>to check all 30 findings with the combined gate</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>What we found</h2>
+  <p>A quick definition first. The <strong>gate</strong> is the check every finding goes through before it's posted to the board. Jev is the judge inside it, but not the whole gate. Today the gate has three steps: code checks that the citations exist, Jev judges the claim against the cited text, and an LLM gives a second opinion when Jev is unsure. The original gate was one step: Jev reading only the citation text.</p>
+  <ol class="findings">
+    <li><h3>The original gate judged how a citation looked, not what it said.</h3>
+      <p>It sent Jev the claim and the citation text, never the cited page or file. A made-up URL that looked right would pass. <span class="ref">run 1 · R1-6, R2-8</span></p></li>
+    <li><h3>Give Jev the source text, and do the rest in code.</h3>
+      <p>Code checks that every cited file, line, and page exists, and does any arithmetic. Jev then judges the claim against the real passages. TypeSafe's own citation-check example works the same way. <span class="ref">run 1 · R2-6 · run 3 · R2-4</span></p></li>
+    <li><h3>Jev and an LLM tie on accuracy, but fail on different findings.</h3>
+      <p>Given the same passages, Jev agreed with 28 of 30 labels and GPT-6 Luna with 27. Jev can't check arithmetic. Luna is sometimes stricter than the claim needs. <span class="ref">eval</span></p></li>
+    <li><h3>Jev knows when it's unsure, which makes a second opinion cheap.</h3>
+      <p>Both arithmetic claims landed in Jev's "unsure" band instead of passing quietly. Sending only those to Luna fixed them, and Luna explained why, which Jev never does. <span class="ref">eval · run 3 · R2-9</span></p></li>
+    <li><h3>Jev is about 3 times cheaper and 6 times faster than the cheapest LLM judge.</h3>
+      <p>For one check on a 2,000-token finding, Jev costs $0.000084, GPT-6 Luna $0.00025, and Claude Haiku 4.5 $0.0025. In the eval, Jev took 0.3 seconds per finding and Luna 2.0. <span class="ref">run 3 · R2-2 · eval</span></p></li>
+    <li><h3>Keep the current cut-offs for now.</h3>
+      <p>Jev rejects below 0.5 support and asks for a second opinion below 0.8. On this set the cut-offs separate good findings from bad, but 30 findings aren't enough to call them tuned. <span class="ref">run 3 · R1-6, R2-9</span></p></li>
+  </ol>
+</section>
+
+<section>
+  <h2>The evidence</h2>
+  <p>We built 30 findings with known answers. Ten are correct. Twenty are bad in five ways: they claim more than their source says, get a number wrong, contradict their source, cite a source that doesn't mention the claim, or cite a file or line that doesn't exist. Four judges ruled on every finding.</p>
+
+  <div class="chart" role="img" aria-label="Agreement with labels out of 30: old gate 14, Jev on sources 28, GPT-6 Luna on sources 27, Jev then Luna 30.">
+    <div class="chart-title">Findings judged correctly, out of 30</div>
+    <div class="bar-row"><div class="bar-label">Old gate, citation text only</div><div class="track" tabindex="0" data-tip="&lt;b&gt;Old gate, citation text only&lt;/b&gt;&lt;br&gt;14 of 30 correct&lt;br&gt;14 bad findings let through&lt;br&gt;$0.00059 for all 30 · 0.36 s each" aria-label="Old gate, citation text only: 14 of 30"><div class="bar" style="width:calc((100% - 56px) * 14 / 30)"></div><span class="bar-value">14</span></div></div>
+    <div class="bar-row"><div class="bar-label">Jev on fetched sources</div><div class="track" tabindex="0" data-tip="&lt;b&gt;Jev on fetched sources&lt;/b&gt;&lt;br&gt;28 of 30 correct&lt;br&gt;2 bad findings let through&lt;br&gt;$0.00067 for all 30 · 0.34 s each" aria-label="Jev on fetched sources: 28 of 30"><div class="bar" style="width:calc((100% - 56px) * 28 / 30)"></div><span class="bar-value">28</span></div></div>
+    <div class="bar-row"><div class="bar-label">GPT-6 Luna on fetched sources</div><div class="track" tabindex="0" data-tip="&lt;b&gt;GPT-6 Luna on fetched sources&lt;/b&gt;&lt;br&gt;27 of 30 correct&lt;br&gt;1 bad findings let through&lt;br&gt;$0.00194 for all 30 · 2.03 s each" aria-label="GPT-6 Luna on fetched sources: 27 of 30"><div class="bar" style="width:calc((100% - 56px) * 27 / 30)"></div><span class="bar-value">27</span></div></div>
+    <div class="bar-row best"><div class="bar-label">Jev, then Luna when unsure</div><div class="track" tabindex="0" data-tip="&lt;b&gt;Jev, then Luna when unsure&lt;/b&gt;&lt;br&gt;30 of 30 correct&lt;br&gt;0 bad findings let through&lt;br&gt;$0.00120 for all 30 · 0.79 s each" aria-label="Jev, then Luna when unsure: 30 of 30"><div class="bar" style="width:calc((100% - 56px) * 30 / 30)"></div><span class="bar-value">30</span></div></div>
+  </div>
+  <div class="tip" id="tip" role="tooltip"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th class="num">Old gate</th><th class="num">Jev on sources</th><th class="num">Luna on sources</th><th class="num col-best">Jev, then Luna</th></tr></thead>
+      <tbody>
+        <tr><td>Agrees with the label</td><td class="num">14 / 30</td><td class="num">28 / 30</td><td class="num">27 / 30</td><td class="num col-best">30 / 30</td></tr>
+        <tr><td>Bad findings let through</td><td class="num">14</td><td class="num">2, both flagged</td><td class="num">1</td><td class="num col-best">0</td></tr>
+        <tr><td>Good findings failed</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num col-best">0</td></tr>
+        <tr><td>Sent to Luna for a second opinion</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num col-best">5</td></tr>
+        <tr><td>Cost for all 30</td><td class="num">$0.00059</td><td class="num">$0.00067</td><td class="num">$0.00194</td><td class="num col-best">$0.00120</td></tr>
+        <tr><td>Time per finding</td><td class="num">0.36 s</td><td class="num">0.34 s</td><td class="num">2.03 s</td><td class="num col-best">0.79 s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">The old gate saw only the citation text. The other three got the same checks and the same cited passages. The labels were written by Claude, who built the tool, and haven't been reviewed independently. Differences of one or two findings are within run-to-run noise: one finding scored 0.46, 0.52, and 0.48 across three Jev calls, on either side of the 0.5 line. The combined gate's perfect score includes that finding: it scored 0.48 in that run and was rejected. At 0.52 it would have gone to Luna, which passed it when judging alone. Read the result as 29 or 30 out of 30.</p>
+
+  <figure class="diagram "><svg viewBox="0 0 360 404" role="img" aria-label="Where the combined gate decided each of the 30 test findings. Code rejected 3 fake citations. Jev rejected 16 bad findings and passed 6 good ones outright. Jev was unsure about 5, which went to GPT-6 Luna: it confirmed 4 good findings and rejected 1 with wrong arithmetic. Result: 10 passed and 20 rejected, matching every label."><defs><marker id="ah-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker></defs><rect x="16" y="8" width="190" height="44" rx="8" class="d-box"/><text x="111" y="27" text-anchor="middle" class="d-t d-b">30 test findings</text><text x="111" y="43" text-anchor="middle" class="d-s">10 good · 20 bad</text><polyline points="111,52 111,79" class="d-line" marker-end="url(#ah-d)"/><rect x="16" y="80" width="190" height="44" rx="8" class="d-box"/><text x="111" y="98.0" text-anchor="middle" class="d-k">CODE</text><text x="111" y="114.0" text-anchor="middle" class="d-t">Do the citations exist?</text><rect x="222" y="85" width="122" height="34" rx="8" class="d-box"/><text x="232" y="100" class="d-t d-b"><tspan class="d-bad">✗</tspan> 3 rejected</text><text x="232" y="113" text-anchor="start" class="d-s">all 3 fake citations</text><polyline points="206,102 222,102" class="d-line"/><polyline points="111,124 111,151" class="d-line" marker-end="url(#ah-d)"/><text x="119" y="142" text-anchor="start" class="d-s">27</text><rect x="16" y="152" width="190" height="76" rx="8" class="d-jev"/><text x="111" y="186.0" text-anchor="middle" class="d-k d-acc">JEV</text><text x="111" y="202.0" text-anchor="middle" class="d-t">Do the sources back it?</text><rect x="222" y="152" width="122" height="34" rx="8" class="d-box"/><text x="232" y="167" class="d-t d-b"><tspan class="d-bad">✗</tspan> 16 rejected</text><text x="232" y="180" text-anchor="start" class="d-s">all bad</text><rect x="222" y="194" width="122" height="34" rx="8" class="d-box"/><text x="232" y="209" class="d-t d-b"><tspan class="d-good">✓</tspan> 6 passed</text><text x="232" y="222" text-anchor="start" class="d-s">all good</text><polyline points="206,169 222,169" class="d-line"/><polyline points="206,211 222,211" class="d-line"/><polyline points="111,228 111,255" class="d-line" marker-end="url(#ah-d)"/><text x="119" y="246" text-anchor="start" class="d-s">5 unsure</text><rect x="16" y="256" width="190" height="76" rx="8" class="d-box"/><text x="111" y="290.0" text-anchor="middle" class="d-k">LLM · GPT-6 LUNA</text><text x="111" y="306.0" text-anchor="middle" class="d-t">Decides and explains</text><rect x="222" y="256" width="122" height="34" rx="8" class="d-box"/><text x="232" y="271" class="d-t d-b"><tspan class="d-good">✓</tspan> 4 confirmed</text><text x="232" y="284" text-anchor="start" class="d-s">all good</text><rect x="222" y="298" width="122" height="34" rx="8" class="d-box"/><text x="232" y="313" class="d-t d-b"><tspan class="d-bad">✗</tspan> 1 rejected</text><text x="232" y="326" text-anchor="start" class="d-s">wrong arithmetic</text><polyline points="206,273 222,273" class="d-line"/><polyline points="206,315 222,315" class="d-line"/><rect x="16" y="352" width="328" height="44" rx="8" class="d-box"/><text x="180" y="371" text-anchor="middle" class="d-t d-b">10 passed · 20 rejected</text><text x="180" y="387" text-anchor="middle" class="d-s">every one matches its label in this run</text></svg><figcaption><b>Where each test finding was decided.</b> Code caught the fake citations before any model ran. Jev settled 22 of the remaining 27 on its own. Luna saw only the 5 Jev was unsure about, which is why the combined gate costs less than Luna alone.</figcaption></figure>
+</section>
+
+<section>
+  <h2>How the answer took shape</h2>
+  <ol class="timeline">
+    <li><div class="when">Run 1</div><h3>The gate can't see the sources</h3>
+      <p>The researchers read the gate's own code and found it judged citations by their wording alone. The run also exposed four bugs in the tool: prices broke in the Summary, a released thread was skipped, a blocked thread was closed with a non-answer, and every thread went to the mid-priced model.</p></li>
+    <li class="change"><div class="when">Changes</div><h3>The gate learns to read</h3>
+      <p>Code now checks references and fetches the cited lines and pages before Jev judges them. All four bugs were fixed.</p></li>
+    <li><div class="when">Run 2</div><h3>A much stricter gate</h3>
+      <p>The new gate rejected 4 of 6 findings, even after retries. The cheap-model fix worked, sending the two lookup threads to the fast tier. A blocked researcher now handed its thread back and asked for help. Was the gate right to be this strict? That needed a test.</p></li>
+    <li class="change"><div class="when">Eval</div><h3>30 findings with known answers</h3>
+      <p>The first eval run caught a bug of ours: cited table rows arrived without their headers, which made the LLM look worse than it was. With that fixed, Jev and Luna tied, but failed on different findings. That pointed to combining them.</p></li>
+    <li><div class="when">Run 3</div><h3>Jev first, LLM second</h3>
+      <p>With the second opinion switched on, Luna confirmed 5 findings Jev was unsure about, and 2 were rejected. The researchers read the eval results in the repo and used them for the final recommendation.</p></li>
+  </ol>
+</section>
+
+<section id="helped">
+  <h2>How simple-agent-collabs helped</h2>
+  <p>simple-agent-collabs is a small research loop. It has a goal file, a shared board in plain markdown, and several LLM researchers working in parallel, with a human leading. Jev makes the quick decisions around them.</p>
+
+  <figure class="diagram "><svg viewBox="0 0 360 332" role="img" aria-label="The goal file feeds two researchers running in parallel inside sac run. Jev sits inside the program and makes four decisions for each researcher&#x27;s turn. Researchers post to board.md and read it before each turn. The human lead writes the Summary and questions on the board."><defs><marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker></defs><rect x="110" y="8" width="140" height="44" rx="8" class="d-box"/><text x="180" y="27" text-anchor="middle" class="d-t d-b">goal.md</text><text x="180" y="43" text-anchor="middle" class="d-s">question + threads</text><rect x="12" y="88" width="336" height="150" rx="12" class="d-frame"/><text x="336" y="104" text-anchor="end" class="d-s d-i">sac run</text><rect x="28" y="112" width="134" height="48" rx="8" class="d-box"/><text x="95" y="132" text-anchor="middle" class="d-t d-b">R1</text><text x="95" y="149" text-anchor="middle" class="d-s">GPT-6 researcher</text><rect x="198" y="112" width="134" height="48" rx="8" class="d-box"/><text x="265" y="132" text-anchor="middle" class="d-t d-b">R2</text><text x="265" y="149" text-anchor="middle" class="d-s">GPT-6 researcher</text><polyline points="176,126 176,146" class="d-line"/><polyline points="184,126 184,146" class="d-line"/><polyline points="160,52 110,110" class="d-line" marker-end="url(#ah-a)"/><polyline points="200,52 250,110" class="d-line" marker-end="url(#ah-a)"/><text x="180" y="76" text-anchor="middle" class="d-s">read once</text><rect x="60" y="178" width="240" height="48" rx="8" class="d-jev"/><text x="180" y="197" text-anchor="middle" class="d-t d-b d-acc">Jev</text><text x="180" y="214" text-anchor="middle" class="d-s">taken? · model? · evidence? · done?</text><polyline points="110,160 130,178" class="d-line d-dash"/><polyline points="250,160 230,178" class="d-line d-dash"/><rect x="28" y="278" width="184" height="46" rx="8" class="d-box"/><text x="120" y="297" text-anchor="middle" class="d-t d-b">board.md</text><text x="120" y="314" text-anchor="middle" class="d-s">claims · findings · questions</text><polyline points="96,238 96,276" class="d-line" marker-end="url(#ah-a)"/><text x="88" y="262" text-anchor="end" class="d-s">posts</text><polyline points="160,276 160,240" class="d-line" marker-end="url(#ah-a)"/><text x="168" y="262" text-anchor="start" class="d-s">reads each turn</text><rect x="254" y="278" width="90" height="46" rx="8" class="d-box"/><text x="299" y="297" text-anchor="middle" class="d-t d-b">You</text><text x="299" y="314" text-anchor="middle" class="d-s">Summary, Qs</text><polyline points="254,305 214,305" class="d-line" marker-end="url(#ah-a)"/><text x="233" y="298" text-anchor="middle" class="d-s">writes</text></svg><figcaption><b>The system.</b> Two researchers work in parallel inside one program. Jev sits in that program, not in the researchers' toolbox: the program asks it four questions on every turn. Everything the researchers and you say to each other goes through <code>board.md</code>.</figcaption></figure>
+
+  <p>Every turn follows the same eight steps, and every finding goes through the same gate before it reaches the board:</p>
+  <figure class="diagram "><svg viewBox="0 0 360 504" role="img" aria-label="One researcher&#x27;s turn in eight steps. Jev decides whether the thread is taken, which model tier to use, and whether the sources back the claim. Code checks citations exist. An LLM gives a second opinion only when Jev is unsure. A rejection at steps 5 to 7 sends the researcher back to step 4 once. After each round, Jev decides whether the goal is answered."><defs><marker id="ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker></defs><rect x="40" y="8" width="176" height="40" rx="8" class="d-box"/><text x="52" y="33" text-anchor="start" class="d-t">1  Pick an open thread</text><rect x="232" y="8" width="116" height="40" rx="20" class="d-jev"/><text x="290" y="24" text-anchor="middle" class="d-k d-acc">JEV</text><text x="290" y="39" text-anchor="middle" class="d-s">already taken?</text><polyline points="216,28 232,28" class="d-line"/><polyline points="128,48 128,63" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="64" width="176" height="40" rx="8" class="d-box"/><text x="52" y="89" text-anchor="start" class="d-t">2  Claim it on the board</text><rect x="232" y="64" width="116" height="40" rx="20" class="d-box"/><text x="290" y="80" text-anchor="middle" class="d-k">LOCK</text><text x="290" y="95" text-anchor="middle" class="d-s">one at a time</text><polyline points="216,84 232,84" class="d-line"/><polyline points="128,104 128,119" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="120" width="176" height="40" rx="8" class="d-box"/><text x="52" y="145" text-anchor="start" class="d-t">3  Choose a model</text><rect x="232" y="120" width="116" height="40" rx="20" class="d-jev"/><text x="290" y="136" text-anchor="middle" class="d-k d-acc">JEV</text><text x="290" y="151" text-anchor="middle" class="d-s">which tier?</text><polyline points="216,140 232,140" class="d-line"/><polyline points="128,160 128,175" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="176" width="176" height="40" rx="8" class="d-box"/><text x="52" y="201" text-anchor="start" class="d-t">4  Research with tools</text><rect x="232" y="176" width="116" height="40" rx="20" class="d-box"/><text x="290" y="192" text-anchor="middle" class="d-k">TOOLS</text><text x="290" y="207" text-anchor="middle" class="d-s">read · grep · fetch</text><polyline points="216,196 232,196" class="d-line"/><polyline points="128,216 128,231" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="232" width="176" height="40" rx="8" class="d-box"/><text x="52" y="257" text-anchor="start" class="d-t">5  Check the citations</text><rect x="232" y="232" width="116" height="40" rx="20" class="d-box"/><text x="290" y="248" text-anchor="middle" class="d-k">CODE</text><text x="290" y="263" text-anchor="middle" class="d-s">do they exist?</text><polyline points="216,252 232,252" class="d-line"/><polyline points="128,272 128,287" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="288" width="176" height="40" rx="8" class="d-box"/><text x="52" y="313" text-anchor="start" class="d-t">6  Judge the claim</text><rect x="232" y="288" width="116" height="40" rx="20" class="d-jev"/><text x="290" y="304" text-anchor="middle" class="d-k d-acc">JEV</text><text x="290" y="319" text-anchor="middle" class="d-s">sources back it?</text><polyline points="216,308 232,308" class="d-line"/><polyline points="128,328 128,343" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="344" width="176" height="40" rx="8" class="d-box"/><text x="52" y="369" text-anchor="start" class="d-t">7  Second opinion</text><rect x="232" y="344" width="116" height="40" rx="20" class="d-box"/><text x="290" y="360" text-anchor="middle" class="d-k">LLM</text><text x="290" y="375" text-anchor="middle" class="d-s">only if Jev unsure</text><polyline points="216,364 232,364" class="d-line"/><polyline points="128,384 128,399" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="400" width="176" height="40" rx="8" class="d-box"/><text x="52" y="425" text-anchor="start" class="d-t">8  Post the finding</text><rect x="232" y="400" width="116" height="40" rx="20" class="d-box"/><text x="290" y="416" text-anchor="middle" class="d-k">BOARD</text><text x="290" y="431" text-anchor="middle" class="d-s">append only</text><polyline points="216,420 232,420" class="d-line"/><polyline points="40,364 24,364 24,196 38,196" class="d-line" marker-end="url(#ah-b)"/><text x="16" y="280.0" text-anchor="middle" class="d-s" transform="rotate(-90 16 280.0)">rejected: retry once</text><polyline points="128,440 128,455" class="d-line" marker-end="url(#ah-b)"/><rect x="40" y="456" width="308" height="40" rx="20" class="d-jev"/><text x="194" y="472" text-anchor="middle" class="d-k d-acc">AFTER EACH ROUND · JEV</text><text x="194" y="487" text-anchor="middle" class="d-s">is the goal answered? if so, stop</text></svg><figcaption><b>One researcher's turn.</b> Blue marks Jev's decisions. Code, not a model, checks that citations exist. The LLM only sees findings Jev is unsure about. A rejection sends the researcher back to research once, carrying the reason. A researcher that can't start, because it needs another thread's result, gives the thread back and posts a question instead of step 8.</figcaption></figure>
+
+  <div class="helped">
+    <div><h3>Two researchers, no overlap</h3>
+      <p>Each run had two researchers working at once, taking 7 or 8 claims between them. A researcher claims a thread before starting, so no two ever worked the same one, except T6, which was taken again after being handed back.</p></div>
+    <div><h3>The right model for each thread</h3>
+      <p>Jev picked a model tier for every thread. By run 3, the lookups T1 and T2 went to GPT-6 Luna, T3 to T5 to GPT-6 Sol, and the final recommendation T6 to GPT-6 Astra.</p></div>
+    <div><h3>Researchers asking each other for help</h3>
+      <p>In run 3, R2 took T6, the recommendation, before T5 was done. Instead of guessing, it handed T6 back and asked for T5's wording, and R1 answered. R2 took T6 again in the same round, so it worked from the code rather than R1's answer. Nobody had to step in, but the handoff shows a limit: researchers don't see posts made during their own turn.</p></div>
+    <div><h3>A human in charge, with everything in plain files</h3>
+      <p>The board is markdown you can read, search, and edit. The Summary is yours. Each run's board is kept, so the three runs can be compared side by side.</p></div>
+    <div><h3>A tool that researched itself</h3>
+      <p>Run 1 found a flaw in the tool's own gate. The fix was tested with the eval, and run 3 used those eval results to reach its answer. Each round of research improved the tool doing the research.</p></div>
+  </div>
+
+  <h3 style="margin-top:36px">How the two researchers worked in this research</h3>
+  <figure class="diagram "><svg viewBox="0 0 360 378" role="img" aria-label="Run 3 in four rounds. Round 1: R1 did T1 on the fast tier and passed; R2 did T2 on the fast tier and was rejected. Round 2: R1 did T4 and R2 did T3, both passed after Luna confirmed. Round 3: R1&#x27;s T5 was rejected; R2 found T6 blocked, gave it back, and asked for T5&#x27;s wording. Round 4: R1 answered the question while R2 took T6 again; both passed."><defs><marker id="ah-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker></defs><text x="120" y="18" text-anchor="middle" class="d-t d-b">R1</text><text x="280" y="18" text-anchor="middle" class="d-t d-b">R2</text><text x="18" y="18" text-anchor="middle" class="d-s">Round</text><circle cx="18" cy="66" r="11" class="d-box"/><text x="18" y="70" text-anchor="middle" class="d-s d-b">1</text><rect x="44" y="34" width="152" height="64" rx="8" class="d-box"/><text x="54" y="54" text-anchor="start" class="d-t d-b">T1 · Jev limits</text><text x="54" y="70" text-anchor="start" class="d-s">fast tier</text><text x="54" y="87" class="d-s"><tspan class="d-good d-b">✓</tspan> passed, Luna agreed</text><rect x="204" y="34" width="152" height="64" rx="8" class="d-box"/><text x="214" y="54" text-anchor="start" class="d-t d-b">T2 · cost, speed</text><text x="214" y="70" text-anchor="start" class="d-s">fast tier</text><text x="214" y="87" class="d-s"><tspan class="d-bad d-b">✗</tspan> rejected by gate</text><circle cx="18" cy="154" r="11" class="d-box"/><text x="18" y="158" text-anchor="middle" class="d-s d-b">2</text><rect x="44" y="122" width="152" height="64" rx="8" class="d-box"/><text x="54" y="142" text-anchor="start" class="d-t d-b">T4 · LLM&#x27;s edge</text><text x="54" y="158" text-anchor="start" class="d-s">standard tier</text><text x="54" y="175" class="d-s"><tspan class="d-good d-b">✓</tspan> passed, Luna agreed</text><rect x="204" y="122" width="152" height="64" rx="8" class="d-box"/><text x="214" y="142" text-anchor="start" class="d-t d-b">T3 · weak spots</text><text x="214" y="158" text-anchor="start" class="d-s">standard tier</text><text x="214" y="175" class="d-s"><tspan class="d-good d-b">✓</tspan> passed, Luna agreed</text><circle cx="18" cy="242" r="11" class="d-box"/><text x="18" y="246" text-anchor="middle" class="d-s d-b">3</text><rect x="44" y="210" width="152" height="64" rx="8" class="d-box"/><text x="54" y="230" text-anchor="start" class="d-t d-b">T5 · reword gate</text><text x="54" y="246" text-anchor="start" class="d-s">standard tier</text><text x="54" y="263" class="d-s"><tspan class="d-bad d-b">✗</tspan> rejected by gate</text><rect x="204" y="210" width="152" height="64" rx="8" class="d-box"/><text x="214" y="230" text-anchor="start" class="d-t d-b">T6 · recommendation</text><text x="214" y="246" text-anchor="start" class="d-s">powerful tier</text><text x="214" y="263" class="d-s"><tspan class="d-s d-b">↩</tspan> blocked, hands it back</text><circle cx="18" cy="338" r="11" class="d-box"/><text x="18" y="342" text-anchor="middle" class="d-s d-b">4</text><rect x="44" y="306" width="152" height="64" rx="8" class="d-box"/><text x="54" y="326" text-anchor="start" class="d-t d-b">R2&#x27;s question</text><text x="54" y="342" text-anchor="start" class="d-s">standard tier</text><text x="54" y="359" class="d-s"><tspan class="d-good d-b">✓</tspan> passed, Luna agreed</text><rect x="204" y="306" width="152" height="64" rx="8" class="d-box"/><text x="214" y="326" text-anchor="start" class="d-t d-b">T6 · recommendation</text><text x="214" y="342" text-anchor="start" class="d-s">powerful tier</text><text x="214" y="359" class="d-s"><tspan class="d-good d-b">✓</tspan> passed, Luna agreed</text><polyline points="280,274 280,294 120,294 120,305" class="d-line" marker-end="url(#ah-c)"/><text x="200" y="288" text-anchor="middle" class="d-s">asks for T5&#x27;s wording</text></svg><figcaption><b>Run 3, round by round.</b> Jev sent the two lookups to the cheap model and the final recommendation to the strongest. In round 3, R2 found T6 needed T5's result, gave it back, and asked for it. In round 4, R1 answered while R2 took T6 again at the same time, so R2 worked from the code directly rather than R1's answer. Researchers don't see posts made during their own turn.</figcaption></figure>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th class="num">Run 1</th><th class="num">Run 2</th><th class="num">Run 3</th></tr></thead>
+      <tbody>
+        <tr><td>Gate</td><td class="num">Citation text only</td><td class="num">Reads sources</td><td class="num">Reads sources, then Luna if unsure</td></tr>
+        <tr><td>Posts on the board</td><td class="num">17</td><td class="num">15</td><td class="num">17</td></tr>
+        <tr><td>Findings</td><td class="num">6</td><td class="num">6</td><td class="num">7</td></tr>
+        <tr><td>Rejected by the gate</td><td class="num">0</td><td class="num">4</td><td class="num">2</td></tr>
+        <tr><td>Confirmed by Luna</td><td class="num">–</td><td class="num">–</td><td class="num">5</td></tr>
+        <tr><td>Lookup threads on the cheap model</td><td class="num">0 of 2</td><td class="num">2 of 2</td><td class="num">2 of 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Limits and open questions</h2>
+  <ul class="limits">
+    <li><strong>The test set is small and unreviewed.</strong> Thirty findings, labeled by the tool's author. The source files are short summaries written for the test, not copies of the real pages.</li>
+    <li><strong>On real research, Luna did most of the judging.</strong> It confirmed 5 of 7 findings in run 3, against 5 of 30 in the eval. Real findings are longer and cite more, so Jev is less sure of them.</li>
+    <li><strong>The gate treats recommendations as facts.</strong> It rejected a finding that proposed new cut-offs, because no source can back a new idea.</li>
+    <li><strong>Findings with unreadable sources still get posted.</strong> They're flagged, but the research recommends holding them for the human lead.</li>
+    <li><strong>No controlled speed comparison.</strong> The timings come from the eval runs only.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li><a href="https://docs.typesafe.ai/models.md">Jev models: limits and pricing</a></li>
+    <li><a href="https://docs.typesafe.ai/model-jaggedness/jev-1.13.md">Jev 1.13 model jaggedness</a></li>
+    <li><a href="https://docs.typesafe.ai/confidence.md">Confidence</a></li>
+    <li><a href="https://docs.typesafe.ai/primitives/choice">Choice primitive</a></li>
+    <li><a href="https://docs.typesafe.ai/primitives/noul.md">Noul primitive</a></li>
+    <li><a href="https://docs.typesafe.ai/cookbooks/citation_check.md">Citation check cookbook</a></li>
+    <li><a href="https://docs.typesafe.ai/introduction/coding-agents.md">Jev for coding agents</a></li>
+    <li><a href="https://platform.openai.com/docs/pricing">OpenAI API pricing</a></li>
+    <li><a href="https://developers.openai.com/api/docs/models">OpenAI models</a></li>
+    <li><a href="https://platform.claude.com/docs/en/about-claude/pricing">Claude API pricing</a></li>
+    <li>Research boards: <a href="board-run1.md">run 1</a>, <a href="board-run2.md">run 2</a>, <a href="board.md">run 3</a>, and the <a href="goal.md">goal</a></li>
+    <li>Eval: <a href="../eval/cases.json">the 30 labeled findings</a> and <a href="../eval/results/2026-09-24T07-09-14-189Z.md">the four-judge results</a></li>
+  </ol>
+</section>
+
+<footer>Structured data for this report is in <code>research.jsonld</code> and embedded in this page. Inspired by <a href="https://github.com/huggingface/agent-collabs">huggingface/agent-collabs</a>.</footer>
+</main>
+<script>
+(() => {
+  const tip = document.getElementById("tip");
+  const show = (el, x, y) => {
+    tip.innerHTML = el.dataset.tip;
+    tip.classList.add("on");
+    const r = tip.getBoundingClientRect();
+    tip.style.left = Math.min(window.innerWidth - r.width - 8, Math.max(8, x + 12)) + "px";
+    tip.style.top = Math.max(8, y - r.height - 12) + "px";
+  };
+  document.querySelectorAll(".track").forEach((el) => {
+    el.addEventListener("mousemove", (e) => show(el, e.clientX, e.clientY));
+    el.addEventListener("mouseleave", () => tip.classList.remove("on"));
+    el.addEventListener("focus", () => { const r = el.getBoundingClientRect(); show(el, r.left + r.width / 2, r.top); });
+    el.addEventListener("blur", () => tip.classList.remove("on"));
+  });
+})();
+</script>
+</body>
+</html>

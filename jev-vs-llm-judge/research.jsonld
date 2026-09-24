@@ -1,0 +1,331 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Report",
+      "@id": "#report",
+      "name": "Is Jev a better finding gate than an LLM judge?",
+      "headline": "Jev first, LLM second: gating research findings",
+      "abstract": "Jev on its own is not proven better than an LLM judge, but Jev first with an LLM second opinion beat either alone. Jev checks every finding against the fetched source text; when it is unsure, GPT-6 Luna decides. On 30 labeled findings it agreed with every label in one run, let no bad finding through, and cost $0.0012 for the set. One finding sat on the 0.5 cut-off, so the fair reading is 29 or 30 out of 30. The earlier gate, which showed Jev only the citation text, let 14 of 20 bad findings through.",
+      "datePublished": "2026-09-24",
+      "inLanguage": "en",
+      "author": {
+        "@type": "Person",
+        "@id": "#lead",
+        "name": "Fadhli Rahim",
+        "roleName": "Human research lead"
+      },
+      "contributor": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Researcher agents R1 and R2",
+          "description": "Two parallel LLM researchers (GPT-6 Luna, Sol, and Astra tiers) run by simple-agent-collabs"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Claude",
+          "description": "Built the tool, the eval set, and this report"
+        }
+      ],
+      "about": [
+        {
+          "@id": "#jev"
+        },
+        {
+          "@type": "Thing",
+          "name": "LLM-as-a-judge"
+        },
+        {
+          "@id": "#gate"
+        }
+      ],
+      "mainEntity": {
+        "@id": "#question"
+      },
+      "isBasedOn": [
+        {
+          "@id": "#eval"
+        },
+        {
+          "@id": "#tool"
+        }
+      ],
+      "citation": [
+        {
+          "@type": "CreativeWork",
+          "name": "Jev models: limits and pricing",
+          "url": "https://docs.typesafe.ai/models.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Jev 1.13 model jaggedness",
+          "url": "https://docs.typesafe.ai/model-jaggedness/jev-1.13.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Confidence",
+          "url": "https://docs.typesafe.ai/confidence.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Choice primitive",
+          "url": "https://docs.typesafe.ai/primitives/choice"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Noul primitive",
+          "url": "https://docs.typesafe.ai/primitives/noul.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Citation check cookbook",
+          "url": "https://docs.typesafe.ai/cookbooks/citation_check.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Jev for coding agents",
+          "url": "https://docs.typesafe.ai/introduction/coding-agents.md"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "OpenAI API pricing",
+          "url": "https://platform.openai.com/docs/pricing"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "OpenAI models",
+          "url": "https://developers.openai.com/api/docs/models"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Claude API pricing",
+          "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+        }
+      ],
+      "keywords": [
+        "Jev",
+        "TypeSafe AI",
+        "LLM as a judge",
+        "research agents",
+        "evidence gating",
+        "multi-agent research"
+      ],
+      "hasPart": [
+        {
+          "@id": "#how-it-works"
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "#how-it-works",
+      "name": "How simple-agent-collabs runs one research turn",
+      "description": "Each researcher repeats these steps in parallel with the others. Jev makes the quick decisions; code checks citations; an LLM gives a second opinion only when Jev is unsure.",
+      "tool": [
+        {
+          "@type": "HowToTool",
+          "name": "goal.md"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "board.md"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "Jev (TypeSafe AI)"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "GPT-6 researcher models"
+        },
+        {
+          "@type": "HowToTool",
+          "name": "GPT-6 Luna as second opinion"
+        }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Pick an open thread",
+          "text": "The researcher reads the board and takes the first open thread or question. Jev checks it isn't already covered by another claim."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Claim it",
+          "text": "The claim is written to the board under a lock, so two researchers never take the same thread."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Choose a model",
+          "text": "Jev picks a tier: fast for lookups, standard for comparisons, powerful for recommendations."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Research with tools",
+          "text": "The LLM reads files, searches, and fetches pages with read-only tools. If the thread depends on unfinished work, it gives the thread back and posts a question."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 5,
+          "name": "Check the citations",
+          "text": "Code checks that every cited file, line, and page exists. A missing one is rejected without asking a model."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 6,
+          "name": "Judge the claim",
+          "text": "Jev reads the cited passages and gives the probability that they back the whole claim. Below 0.5 it is rejected; the researcher retries once with the reason."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 7,
+          "name": "Second opinion",
+          "text": "If Jev is unsure, below 0.8, an LLM reads the same passages, decides, and explains."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 8,
+          "name": "Post the finding",
+          "text": "The finding is appended to the board. After each round, Jev estimates whether the goal is answered and the run stops above 0.85."
+        }
+      ]
+    },
+    {
+      "@type": "Question",
+      "@id": "#question",
+      "name": "Is Jev a better gate for research findings than an LLM-as-judge, and what question phrasing makes Jev's gate reliable?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Jev on its own is not proven better than an LLM judge, but Jev first with an LLM second opinion beat either alone. Jev checks every finding against the fetched source text; when it is unsure, GPT-6 Luna decides. On 30 labeled findings it agreed with every label in one run, let no bad finding through, and cost $0.0012 for the set. One finding sat on the 0.5 cut-off, so the fair reading is 29 or 30 out of 30. The earlier gate, which showed Jev only the citation text, let 14 of 20 bad findings through.",
+        "dateCreated": "2026-09-24"
+      }
+    },
+    {
+      "@type": "Dataset",
+      "@id": "#eval",
+      "name": "Finding-gate eval: 30 labeled research findings",
+      "description": "10 correct findings and 20 bad ones (6 overreach, 5 wrong number, 3 contradicted, 3 unsupported, 3 fake citation), each citing frozen source files. Labels were written by Claude and have not been independently reviewed.",
+      "dateCreated": "2026-09-24",
+      "measurementTechnique": "Each judge rules pass or fail on every finding; agreement with the label, bad findings passed, cost, and time are recorded. Run 2026-09-24T07:09Z.",
+      "variableMeasured": [
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: agreement with labels",
+          "value": 14,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: agreement with labels",
+          "value": 28,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: agreement with labels",
+          "value": 27,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: agreement with labels",
+          "value": 30,
+          "maxValue": 30
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: bad findings passed",
+          "value": 14,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: bad findings passed",
+          "value": 2,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: bad findings passed",
+          "value": 1,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: bad findings passed",
+          "value": 0,
+          "maxValue": 20
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Old gate: Jev on citation text only: cost for 30 findings",
+          "value": 0.00059,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev on fetched sources: cost for 30 findings",
+          "value": 0.00067,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GPT-6 Luna on fetched sources: cost for 30 findings",
+          "value": 0.00194,
+          "unitText": "USD"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Jev first, GPT-6 Luna when Jev is unsure: cost for 30 findings",
+          "value": 0.0012,
+          "unitText": "USD"
+        }
+      ]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "#tool",
+      "name": "simple-agent-collabs",
+      "description": "A file-based research loop for one human and several LLM researchers, sharing a goal file and an append-only board. Jev makes the fast decisions: duplicate checks, model routing, evidence gating, and the stop check.",
+      "programmingLanguage": "TypeScript",
+      "runtimePlatform": [
+        "Bun",
+        "Node.js"
+      ],
+      "isBasedOn": {
+        "@type": "SoftwareSourceCode",
+        "name": "huggingface/agent-collabs",
+        "codeRepository": "https://github.com/huggingface/agent-collabs"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "#jev",
+      "name": "Jev",
+      "applicationCategory": "AI decision model",
+      "softwareVersion": "1.13",
+      "description": "A System One model that returns typed decisions with probabilities instead of text.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "TypeSafe AI",
+        "url": "https://typesafe.ai"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0.042",
+        "priceCurrency": "USD",
+        "description": "Per million input tokens; output tokens are free"
+      }
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "#gate",
+      "name": "finding gate",
+      "description": "The check every research finding goes through before it is posted to the board. In simple-agent-collabs it has three steps: code checks that cited files, lines, and pages exist; Jev judges whether the cited passages back the whole claim; an LLM gives a second opinion when Jev is unsure. The original gate was one step: Jev reading only the citation text."
+    }
+  ]
+}

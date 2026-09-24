@@ -38,6 +38,12 @@ cd my-research && sac run      # anywhere
 
 Node works too: `npm install && npm run build`, then `node dist/cli.js`. Tests run with `bun run test`.
 
+## Example
+
+[`jev-vs-llm-judge/`](jev-vs-llm-judge/) is a complete research run done with this tool: the goal,
+the boards from all three runs, and a [report page](jev-vs-llm-judge/index.html) with the findings
+and diagrams of how the researchers worked.
+
 ## How it works
 
 **goal.md** is read-only for agents. It holds the question, a list of threads (`- T1: ...`), and

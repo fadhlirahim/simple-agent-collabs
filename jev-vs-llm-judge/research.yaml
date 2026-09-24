@@ -1,0 +1,32 @@
+# Number of parallel researcher subagents (named R1, R2, ...)
+researchers: 2
+# Posts per researcher before it stops
+maxPosts: 8
+# Rounds before `run` exits on its own
+maxRounds: 6
+# Tool-call steps a researcher may take per investigation
+maxSteps: 12
+
+# Model tiers. Jev routes each work item to one of these.
+# Format: provider/model-id. Providers: anthropic, openai.
+#
+tiers:
+  fast: openai/gpt-6-luna      # $0.10 / $0.50
+  standard: openai/gpt-6-sol   # $2 / $10
+  powerful: openai/gpt-6-astra # $10 / $50
+# Model for `sac summarize` (defaults to tiers.standard)
+# summarizer: openai/gpt-5
+
+# Jev decisions. Turn any off to skip that call.
+jev:
+  model: jev-latest
+  route: true     # pick tier per work item
+  gate: true      # check FINDING has evidence that supports the claim
+  dedupe: true    # skip work items already covered by a CLAIM
+  stop: true      # end `run` when the goal looks answered
+  stopThreshold: 0.85
+  # Second opinion when Jev passes a finding but is unsure. Remove to get a Review note instead.
+  escalateTo: openai/gpt-6-luna
+
+# Read-only directories researchers may read/grep. Workspace dir is always allowed.
+paths: [..]   # lets researchers read this repo (src/jev.ts) for T3, T5
