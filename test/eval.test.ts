@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { MockLanguageModelV3 } from "ai/test";
 import { checkEvidence, parseRefs } from "../src/evidence.js";
-import { jevCitationsOnly, jevWithSources, llmWithSources, type Case } from "../src/eval/judges.js";
+import { jevCitationsOnly, jevThenLlm, jevWithSources, llmWithSources, type Case } from "../src/eval/judges.js";
 import { report, score, type Row } from "../src/eval/score.js";
 
 const repo = join(import.meta.dirname, "..");
@@ -41,7 +41,8 @@ test("jev-sources: fake citation is decided by code, real one reaches Jev", asyn
   const fake = await judge.run(byId("F01"));
   assert.deepEqual([fake.pass, fake.stage, calls], [false, "code", 0]);
   const real = await judge.run(byId("C01"));
-  assert.deepEqual([real.pass, real.stage, real.inputTokens, calls, real.support, real.certainty], [true, "judge", 300, 1, 0.95, 0.9]);
+  assert.deepEqual([real.pass, real.stage, calls, real.support, real.certainty], [true, "judge", 1, 0.95, 0.9]);
+  assert.ok(Math.abs(real.costUsd - (300 * 0.042) / 1e6) < 1e-12);
 });
 
 test("jev-citations never reads sources, so a fake citation can pass", async () => {
@@ -54,19 +55,30 @@ test("jev-citations never reads sources, so a fake citation can pass", async () 
 
 test("llm judge sees the source text and its verdict is used", async () => {
   const model = new MockLanguageModelV3({ doGenerate: async () => reply({ supported: false, reason: "Source gives $0.042, not $0.42." }) });
-  const r = await llmWithSources(model, [repo]).run(byId("W01"));
-  assert.deepEqual([r.pass, r.stage, r.inputTokens, r.outputTokens], [false, "judge", 50, 10]);
+  const r = await llmWithSources(model, [0.1, 0.5], [repo], "llm").run(byId("W01"));
+  assert.deepEqual([r.pass, r.stage], [false, "judge"]);
+  assert.ok(Math.abs(r.costUsd - (50 * 0.1 + 10 * 0.5) / 1e6) < 1e-12);
   assert.match(JSON.stringify(model.doGenerateCalls[0].prompt), /Input costs \$0\.042 per million tokens/);
 });
 
+test("jev+llm asks the LLM only when Jev is unsure", async () => {
+  const jevSays = (support: number) => ({ systemOne: async () => ({ answers: { supports: { noul: support }, confidence: { choice: "high", confidence: 0.95 } }, usage: { input_tokens: 100, output_tokens: 0 } }) }) as any;
+  const model = new MockLanguageModelV3({ doGenerate: async () => reply({ supported: false, reason: "1 / 0.042 is about 24, not over 50." }) });
+  const sure = await jevThenLlm(jevSays(0.95), model, [0.1, 0.5], [repo], "j").run(byId("C01"));
+  assert.deepEqual([sure.pass, sure.escalated, model.doGenerateCalls.length], [true, false, 0]);
+  const unsure = await jevThenLlm(jevSays(0.63), model, [0.1, 0.5], [repo], "j").run(byId("W05"));
+  assert.deepEqual([unsure.pass, unsure.escalated, unsure.review, model.doGenerateCalls.length], [false, true, false, 1]);
+  assert.match(unsure.reason, /about 24/);
+});
+
 test("score counts false passes, review catches, and cost", () => {
-  const run = (pass: boolean, review = false) => ({ pass, review, stage: "judge" as const, reason: "x", ms: 100, inputTokens: 1_000_000, outputTokens: 0 });
+  const run = (pass: boolean, review = false) => ({ pass, review, stage: "judge" as const, escalated: false, reason: "x", ms: 100, costUsd: 0.042 });
   const rows: Row[] = [
     { case: byId("C01"), runs: { j: run(true) } },
     { case: byId("W01"), runs: { j: run(true, true) } },
     { case: byId("X01"), runs: { j: run(false) } },
   ];
-  const s = score(rows, "j", [0.042, 0]);
+  const s = score(rows, "j");
   assert.deepEqual([s.agree, s.total, s.falsePass, s.reviewCaught], [2, 3, ["W01"], ["W01"]]);
   assert.ok(Math.abs(s.costUsd - 0.126) < 1e-9);
   assert.match(report(rows, [s]), /\| Agrees with label \| 2\/3 \(67%\) \|/);

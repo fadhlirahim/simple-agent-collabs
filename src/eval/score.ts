@@ -5,9 +5,6 @@ export interface Row {
   runs: Record<string, Run>;
 }
 
-/** $ per million tokens: [input, output]. */
-export type Prices = Record<string, [number, number]>;
-
 export interface JudgeScore {
   judge: string;
   agree: number;
@@ -21,16 +18,18 @@ export interface JudgeScore {
   /** Failed cases that passed only with a review note, so a human would still see them. */
   reviewCaught: string[];
   decidedByCode: number;
+  /** Cases a second judge ruled on because Jev was unsure. */
+  escalated: string[];
   errors: string[];
   costUsd: number;
   avgMs: number;
   byKind: Record<string, { agree: number; total: number }>;
 }
 
-export function score(rows: Row[], judge: string, prices: [number, number]): JudgeScore {
+export function score(rows: Row[], judge: string): JudgeScore {
   const s: JudgeScore = {
     judge, agree: 0, total: 0, falsePass: [], falseFail: [], review: [], reviewCaught: [],
-    decidedByCode: 0, errors: [], costUsd: 0, avgMs: 0, byKind: {},
+    decidedByCode: 0, escalated: [], errors: [], costUsd: 0, avgMs: 0, byKind: {},
   };
   let ms = 0;
   for (const { case: c, runs } of rows) {
@@ -51,7 +50,8 @@ export function score(rows: Row[], judge: string, prices: [number, number]): Jud
     if (r.review) s.review.push(c.id);
     if (r.review && c.label === "fail") s.reviewCaught.push(c.id);
     if (r.stage === "code") s.decidedByCode++;
-    s.costUsd += (r.inputTokens * prices[0] + r.outputTokens * prices[1]) / 1e6;
+    if (r.escalated) s.escalated.push(c.id);
+    s.costUsd += r.costUsd;
     ms += r.ms;
   }
   s.avgMs = s.total ? ms / s.total : 0;
@@ -68,6 +68,8 @@ export function report(rows: Row[], scores: JudgeScore[]): string {
     `| Agrees with label | ${scores.map((s) => `${s.agree}/${s.total} (${pct(s.agree, s.total)})`).join(" | ")} |`,
     `| Bad finding passed | ${scores.map((s) => s.falsePass.length).join(" | ")} |`,
     `| …of those, flagged for review | ${scores.map((s) => s.reviewCaught.length).join(" | ")} |`,
+    `| Flagged for review, all findings | ${scores.map((s) => s.review.length).join(" | ")} |`,
+    `| Sent to the LLM for a second opinion | ${scores.map((s) => s.escalated.length).join(" | ")} |`,
     `| Good finding failed | ${scores.map((s) => s.falseFail.length).join(" | ")} |`,
     `| Decided by code, no judge | ${scores.map((s) => s.decidedByCode).join(" | ")} |`,
     `| Errors | ${scores.map((s) => s.errors.length).join(" | ")} |`,

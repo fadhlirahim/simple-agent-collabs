@@ -4,11 +4,10 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { resolveModel } from "../models.js";
-import { jevCitationsOnly, jevWithSources, llmWithSources, type Case, type EvalJudge } from "./judges.js";
-import { report, score, type Prices, type Row } from "./score.js";
+import { jevCitationsOnly, jevThenLlm, jevWithSources, llmWithSources, type Case, type EvalJudge, type Price } from "./judges.js";
+import { report, score, type Row } from "./score.js";
 
-const PRICES: Prices = {
-  "jev": [0.042, 0],
+const PRICES: Record<string, Price> = {
   "openai/gpt-6-luna": [0.1, 0.5],
   "openai/gpt-6-sol": [2, 10],
   "openai/gpt-6-astra": [10, 50],
@@ -45,9 +44,14 @@ if (needed.length) {
 const cases: Case[] = JSON.parse(readFileSync(join(repo, "eval", "cases.json"), "utf8"));
 const roots = [repo];
 const jev = wanted("jev") ? new TypeSafeClient() : undefined;
+const llm = resolveModel(values.judge);
+const llmPrice = PRICES[values.judge] ?? [0, 0];
+if (!PRICES[values.judge]) console.warn(`No price on file for ${values.judge}; its cost shows as $0.`);
+const short = values.judge.split("/")[1];
 const judges: EvalJudge[] = [
   ...(jev ? [jevCitationsOnly(jev), jevWithSources(jev, roots)] : []),
-  llmWithSources(resolveModel(values.judge), roots, `llm:${values.judge.split("/")[1]}`),
+  llmWithSources(llm, llmPrice, roots, `llm:${short}`),
+  ...(jev ? [jevThenLlm(jev, llm, llmPrice, roots, `jev+${short}`)] : []),
 ].filter((j) => wanted(j.name));
 
 console.log(`${cases.length} cases × ${judges.length} judges: ${judges.map((j) => j.name).join(", ")}`);
@@ -60,7 +64,7 @@ for (let i = 0; i < rows.length; i += limit) {
         try {
           row.runs[j.name] = await j.run(row.case);
         } catch (e: any) {
-          row.runs[j.name] = { pass: false, review: false, stage: "judge", reason: "", ms: 0, inputTokens: 0, outputTokens: 0, error: e.message };
+          row.runs[j.name] = { pass: false, review: false, stage: "judge", escalated: false, reason: "", ms: 0, costUsd: 0, error: e.message };
           console.error(`${j.name} ${row.case.id}: ${e.message}`);
         }
       }),
@@ -70,8 +74,7 @@ for (let i = 0; i < rows.length; i += limit) {
 }
 console.log("\n");
 
-const priceFor = (name: string): [number, number] => (name.startsWith("jev") ? PRICES.jev : PRICES[values.judge] ?? [0, 0]);
-const scores = judges.map((j) => score(rows, j.name, priceFor(j.name)));
+const scores = judges.map((j) => score(rows, j.name));
 const md = report(rows, scores);
 console.log(md);
 
