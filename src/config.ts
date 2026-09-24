@@ -23,6 +23,8 @@ export const ConfigSchema = z.object({
       dedupe: z.boolean().default(true),
       stop: z.boolean().default(true),
       stopThreshold: z.number().min(0).max(1).default(0.85),
+      /** LLM that rules on findings Jev passes but is unsure about. Unset: they get a Review note. */
+      escalateTo: modelRef.optional(),
     })
     .prefault({}),
   paths: z.array(z.string()).default([]),

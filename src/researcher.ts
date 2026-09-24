@@ -3,7 +3,7 @@ import { z } from "zod";
 import { appendPost, nextN, readBoard, withBoardLock, writePost, type Board, type Post } from "./board.js";
 import type { Config, Tier } from "./config.js";
 import { activeClaims, openItems, type Goal, type WorkItem } from "./goal.js";
-import { checkFinding } from "./gate.js";
+import { checkFinding, type Judge } from "./gate.js";
 import { CONFIDENCE, type Decider, type Gate } from "./jev.js";
 import { investigationPrompt, SYSTEM } from "./prompts.js";
 import type { Tools } from "./tools.js";
@@ -14,6 +14,8 @@ export interface Ctx {
   boardFile: string;
   tools: Tools;
   jev: Decider;
+  /** Rules on each finding's sources: Jev, optionally escalating to an LLM. */
+  judge: Judge;
   /** Directories the tools and the evidence check may read. */
   roots: string[];
   model: (tier: Tier) => LanguageModel;
@@ -102,7 +104,7 @@ async function investigate(
       return "posted";
     }
 
-    const gate: Gate = config.jev.gate ? await checkFinding(output, ctx.roots, jev.gateFinding) : { ok: true, reasons: [], confidence: output.confidence, review: [] };
+    const gate: Gate = config.jev.gate ? await checkFinding(output, ctx.roots, ctx.judge) : { ok: true, reasons: [], confidence: output.confidence, review: [] };
     const tokens = `${totalUsage.inputTokens ?? 0}in/${totalUsage.outputTokens ?? 0}out`;
 
     if (!gate.ok && attempt === 1) {
@@ -121,6 +123,7 @@ async function investigate(
     if (gate.confidence !== output.confidence) fields.StatedConfidence = [output.confidence];
     if (!gate.ok) fields.Gate = [`rejected: ${gate.reasons.join("; ")}`];
     if (gate.review.length) fields.Review = gate.review;
+    if (gate.checkedBy) fields.CheckedBy = [gate.checkedBy];
     await post("FINDING", output.title, fields);
     const flag = !gate.ok ? ", gate-rejected" : gate.review.length ? ", needs review" : "";
     log(me, `FINDING ${item.ref} [${gate.confidence}${flag}] ${tokens}`);

@@ -22,6 +22,8 @@ export interface Gate {
   review: string[];
   /** Jev's raw numbers: probability the sources support the claim, and certainty of the label. */
   scores?: { support: number; certainty: number };
+  /** Set when a second judge ruled because the first was unsure. */
+  checkedBy?: string;
 }
 
 const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };

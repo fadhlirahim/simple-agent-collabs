@@ -26,7 +26,7 @@ async function setup(model: MockLanguageModelV3, jev: Decider = passthrough) {
   await mkdir(join(dir, "src"));
   await writeFile(join(dir, "src", "x.ts"), "export const x = 1;\n");
   const config = ConfigSchema.parse({ tiers: { fast: "x/a", standard: "x/b", powerful: "x/c" }, maxSteps: 2 });
-  const ctx: Ctx = { config, goal, boardFile, roots: [dir], tools: makeTools([dir]), jev, model: () => model, log: () => {} };
+  const ctx: Ctx = { config, goal, boardFile, roots: [dir], tools: makeTools([dir]), jev, judge: jev.gateFinding, model: () => model, log: () => {} };
   return { ctx, boardFile, board: async () => parseBoard(await readFile(boardFile, "utf8")) };
 }
 

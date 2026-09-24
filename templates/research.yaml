@@ -31,6 +31,8 @@ jev:
   dedupe: true    # skip work items already covered by a CLAIM
   stop: true      # end `run` when the goal looks answered
   stopThreshold: 0.85
+  # Second opinion when Jev passes a finding but is unsure. Remove to get a Review note instead.
+  escalateTo: openai/gpt-6-luna
 
 # Read-only directories researchers may read/grep, relative to this file. Workspace dir is always allowed.
 paths: []

@@ -9,6 +9,8 @@ import { loadConfig, type Config } from "./config.js";
 import { loadGoal, openItems } from "./goal.js";
 import { createJev, passthrough, type Decider } from "./jev.js";
 import { resolveModel } from "./models.js";
+import { escalate } from "./gate.js";
+import { llmJudge } from "./llm-judge.js";
 import { tick, type Ctx } from "./researcher.js";
 import { summarize } from "./summarize.js";
 import { makeTools } from "./tools.js";
@@ -77,13 +79,16 @@ async function run(once: boolean) {
   const config = loadConfig(dir);
   const goal = loadGoal(join(dir, "goal.md"));
   const roots = [dir, ...config.paths.map((p) => resolve(dir, p))];
+  const jev = buildJev(config);
+  const second = config.jev.escalateTo;
   const ctx: Ctx = {
     config,
     goal,
     boardFile,
     roots,
     tools: makeTools(roots),
-    jev: buildJev(config),
+    jev,
+    judge: second ? escalate(jev.gateFinding, llmJudge(resolveModel(second)), second) : jev.gateFinding,
     model: (tier) => resolveModel(config.tiers[tier]),
     log,
   };

@@ -91,6 +91,7 @@ LLM researches, using tools only
       ▼
 check the finding ─► code: do the cited files and pages exist?
                   └► Jev: do those sources back the claim?     (3)
+                        └► unsure? an LLM gives a second opinion
       │
       ▼
 post to the board
@@ -108,6 +109,10 @@ after each round ─► Jev: is the goal answered yet?             (4)
    without asking Jev. Then the cited lines and page text go to Jev, which says whether they back
    the whole claim and how strongly: high, medium, or low. This follows TypeSafe's
    [citation check](https://docs.typesafe.ai/cookbooks/citation_check.md) example.
+   When Jev passes a finding but is unsure, an LLM set by `jev.escalateTo` reads the same
+   passages and decides. If it disagrees, its reason goes back to the researcher for the retry,
+   which Jev can't give because it never explains itself. Jev is also bad at arithmetic, so a
+   claim like "20 times cheaper" usually lands here.
 4. **Are we done?** Jev reads all the findings and says how likely it is that the goal is answered.
 
 **Why Jev and not an LLM for these.** Each is a yes-or-no or pick-one question. Jev answers in
@@ -120,7 +125,7 @@ Jev answers with probabilities, and the program turns them into actions:
 | --- | --- |
 | Is it taken? | 70% or more likely: skip the item |
 | Which model? | Jev less than 50% sure: use the standard tier |
-| Does the evidence hold up? | Support under 50%: reject and retry once. Under 80%, or Jev unsure how strong: post with a `Review:` note for you |
+| Does the evidence hold up? | Support under 50%: reject and retry once. Under 80%, or Jev unsure how strong: ask the `escalateTo` LLM, or post with a `Review:` note if none is set |
 | Are we done? | At or above `stopThreshold` (default 85%): end the run |
 
 Jev's strength rating replaces the researcher's own when they differ. The researcher's is kept
@@ -151,6 +156,7 @@ Three judges run on every finding:
 | `jev-citations` | The gate before the fix: only the citation text, never the source |
 | `jev-sources` | Today's gate: code checks the references exist, then Jev reads the cited lines |
 | `llm:<model>` | The same checks and the same cited lines, judged by an LLM (GPT-6 Luna by default) |
+| `jev+<model>` | Today's gate with a second opinion: Jev on every finding, the LLM only where Jev is unsure |
 
 The report shows how often each judge agrees with the labels, how many bad findings it let
 through, how many of those it flagged for review, and what the whole set cost. It's saved to
@@ -171,7 +177,7 @@ tiers:
   fast: openai/gpt-6-luna
   standard: openai/gpt-6-sol
   powerful: anthropic/claude-opus-5-5   # tiers can mix providers
-jev: { model: jev-latest, route: true, gate: true, dedupe: true, stop: true, stopThreshold: 0.85 }
+jev: { model: jev-latest, route: true, gate: true, dedupe: true, stop: true, stopThreshold: 0.85, escalateTo: openai/gpt-6-luna }
 paths: [../some-repo]   # extra read-only roots, relative to the workspace
 ```
 
@@ -199,8 +205,8 @@ test/            node:test, offline (mock model + scripted Decider)
 
 - No web search tool. `fetch_url` works on known URLs. Provider-native search
   (Anthropic/OpenAI web search tools) is a one-line add once you want it.
-- No LLM judge behind the gate. Doubtful findings get a `Review:` note for you instead. The
-  0.5 and 0.8 cut-offs are TypeSafe's example values, not tuned on labeled findings yet.
+- The 0.5 and 0.8 gate cut-offs are TypeSafe's example values. The eval supports them on 30
+  findings, which is too few to call them tuned.
 - No LLM lead. You condense the Summary; `sac summarize` only drafts it.
 - Single process. The lock is in-memory, so run one `sac run` per workspace.
 - `fetch_url` blocks private and loopback targets by resolved IP and re-checks each redirect,
