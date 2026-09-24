@@ -41,7 +41,7 @@ Node works too: `npm install && npm run build`, then `node dist/cli.js`. Tests r
 ## Example
 
 [`jev-vs-llm-judge/`](jev-vs-llm-judge/) is a complete research run done with this tool: the goal,
-the boards from all three runs, and a [report page](jev-vs-llm-judge/index.html) with the findings
+the boards from all three runs, and a [report page](https://fadhlirahim.github.io/simple-agent-collabs/jev-vs-llm-judge/) with the findings
 and diagrams of how the researchers worked.
 
 ## How it works
