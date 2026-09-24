@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkUrl, makeTools } from "../src/tools.js";
+import { checkUrl, isPrivateIp, makeTools } from "../src/tools.js";
 
 const opts = { toolCallId: "t", messages: [] } as any;
 
@@ -24,10 +24,17 @@ test("grep treats a leading-dash pattern as a pattern", async () => {
   assert.match(String(out), /a\.txt:1:--version here/);
 });
 
-test("checkUrl blocks private hosts and odd schemes", () => {
-  assert.equal(checkUrl("https://docs.typesafe.ai/x"), undefined);
-  assert.match(checkUrl("http://localhost:8080/")!, /blocked host/);
-  assert.match(checkUrl("http://169.254.169.254/latest/meta-data")!, /blocked host/);
-  assert.match(checkUrl("http://10.0.0.5/")!, /blocked host/);
-  assert.match(checkUrl("file:///etc/passwd")!, /blocked scheme/);
+test("isPrivateIp covers v4, v6, and v4-mapped ranges", () => {
+  for (const ip of ["127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.1", "169.254.169.254", "0.0.0.0", "::1", "fd00::1", "fe80::1", "::ffff:127.0.0.1"]) {
+    assert.equal(isPrivateIp(ip), true, ip);
+  }
+  for (const ip of ["8.8.8.8", "172.32.0.1", "2606:4700::1111"]) assert.equal(isPrivateIp(ip), false, ip);
+});
+
+test("checkUrl blocks private targets, odd schemes, and localhost", async () => {
+  assert.match((await checkUrl("http://localhost:8080/"))!, /blocked host/);
+  assert.match((await checkUrl("http://169.254.169.254/latest/meta-data"))!, /private address/);
+  assert.match((await checkUrl("http://[::1]/"))!, /private address/);
+  assert.match((await checkUrl("http://0x7f000001/"))!, /private address|cannot resolve/);
+  assert.match((await checkUrl("file:///etc/passwd"))!, /blocked scheme/);
 });
