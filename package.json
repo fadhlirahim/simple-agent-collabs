@@ -10,7 +10,8 @@
     "sac": "bun src/cli.ts",
     "build": "tsc -p tsconfig.json",
     "test": "node --import tsx --test test/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "eval": "bun src/eval/run.ts"
   },
   "engines": {
     "node": ">=20"

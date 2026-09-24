@@ -131,6 +131,33 @@ Switch any of the four off in `research.yaml` under `jev:`. The program then ski
 the standard tier, posts findings unchecked, and runs every round. With all four off, you don't
 need `TYPESAFE_API_KEY`.
 
+## Testing the gate
+
+`eval/` holds 30 findings with known answers, to compare judges on the same material. Ten are
+correct. The rest go beyond their source, get a number wrong, contradict their source, cite a
+source that doesn't mention the claim, or cite a file or line that doesn't exist. Each one cites
+small frozen source files in `eval/sources/`, so results don't change when a web page does.
+
+```sh
+bun run eval --env my-research/.env                               # all three judges
+bun run eval --env my-research/.env --judge anthropic/claude-haiku-4-5
+bun run eval --env my-research/.env --only jev                    # Jev judges only
+```
+
+Three judges run on every finding:
+
+| Judge | What it sees |
+| --- | --- |
+| `jev-citations` | The gate before the fix: only the citation text, never the source |
+| `jev-sources` | Today's gate: code checks the references exist, then Jev reads the cited lines |
+| `llm:<model>` | The same checks and the same cited lines, judged by an LLM (GPT-6 Luna by default) |
+
+The report shows how often each judge agrees with the labels, how many bad findings it let
+through, how many of those it flagged for review, and what the whole set cost. It's saved to
+`eval/results/`. Every disagreement is listed with the judge's reason, so you can tell a wrong
+judge from a wrong label. The labels are in `eval/cases.json`, each with a one-line reason.
+Check them before you trust the numbers.
+
 ## Configuration
 
 `research.yaml` (see `templates/research.yaml` for comments):
