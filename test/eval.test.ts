@@ -41,7 +41,7 @@ test("jev-sources: fake citation is decided by code, real one reaches Jev", asyn
   const fake = await judge.run(byId("F01"));
   assert.deepEqual([fake.pass, fake.stage, calls], [false, "code", 0]);
   const real = await judge.run(byId("C01"));
-  assert.deepEqual([real.pass, real.stage, real.inputTokens, calls], [true, "judge", 300, 1]);
+  assert.deepEqual([real.pass, real.stage, real.inputTokens, calls, real.support, real.certainty], [true, "judge", 300, 1, 0.95, 0.9]);
 });
 
 test("jev-citations never reads sources, so a fake citation can pass", async () => {

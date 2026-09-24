@@ -88,5 +88,17 @@ export function report(rows: Row[], scores: JudgeScore[]): string {
       lines.push(`- ${s.judge} ${id} (${row.case.kind}, label ${row.case.label}): said ${r.pass ? "pass" : "fail"}${r.review ? " with review" : ""}. ${r.reason}`);
     }
   }
+  const jevJudges = scores.map((s) => s.judge).filter((j) => rows.some((r) => r.runs[j]?.support !== undefined));
+  if (jevJudges.length) {
+    const f = (n?: number) => (n === undefined ? "–" : n.toFixed(2));
+    lines.push(
+      "",
+      "Jev's numbers per case. Support under 0.50 rejects; under 0.80 is flagged for review. Certainty under 0.80 is flagged too.",
+      "",
+      `| Case | Kind | Label | ${jevJudges.map((j) => `${j} support`).join(" | ")} | ${jevJudges.map((j) => `${j} certainty`).join(" | ")} |`,
+      `| --- | --- | --- |${jevJudges.map(() => " --- |").join("").repeat(2)}`,
+      ...rows.map(({ case: c, runs }) => `| ${c.id} | ${c.kind} | ${c.label} | ${jevJudges.map((j) => f(runs[j]?.support)).join(" | ")} | ${jevJudges.map((j) => f(runs[j]?.certainty)).join(" | ")} |`),
+    );
+  }
   return lines.join("\n");
 }

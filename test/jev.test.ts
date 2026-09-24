@@ -11,7 +11,7 @@ const gateWith = (support: number, choice: "high" | "medium" | "low", certainty:
 
 test("clear support passes with Jev's label and no review", async () => {
   const g = await gateWith(0.95, "medium", 0.9).gateFinding(draft, sources);
-  assert.deepEqual(g, { ok: true, reasons: [], confidence: "medium", review: [] });
+  assert.deepEqual(g, { ok: true, reasons: [], confidence: "medium", review: [], scores: { support: 0.95, certainty: 0.9 } });
 });
 
 test("weak support is rejected", async () => {

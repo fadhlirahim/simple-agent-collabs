@@ -68,14 +68,7 @@ export async function checkEvidence(items: string[], roots: string[]): Promise<C
         out.missing.push(`${ref} (file has ${lines.length} lines)`);
         continue;
       }
-      const text = f.ranges
-        .map(([a, b]) => {
-          const s = Math.max(1, a - CONTEXT_LINES);
-          const e = Math.min(lines.length, b + CONTEXT_LINES);
-          return lines.slice(s - 1, e).map((l, i) => `${s + i}\t${l}`).join("\n");
-        })
-        .join("\n…\n");
-      out.sources.push({ ref, text: text.slice(0, MAX_SOURCE) });
+      out.sources.push({ ref, text: excerpt(lines, f.ranges).slice(0, MAX_SOURCE) });
     }
 
     for (const url of urls) {
@@ -86,6 +79,23 @@ export async function checkEvidence(items: string[], roots: string[]): Promise<C
     }
   }
   return out;
+}
+
+const isTableRow = (l: string | undefined) => !!l && l.trim().startsWith("|");
+
+/** Cited lines with a little context, numbered. A cited table row also gets the table's header. */
+export function excerpt(lines: string[], ranges: [number, number][]): string {
+  const keep = new Set<number>();
+  for (const [a, b] of ranges) {
+    for (let n = Math.max(1, a - CONTEXT_LINES); n <= Math.min(lines.length, b + CONTEXT_LINES); n++) keep.add(n);
+    if (isTableRow(lines[a - 1])) {
+      let top = a;
+      while (top > 1 && isTableRow(lines[top - 2])) top--;
+      keep.add(top).add(top + 1);
+    }
+  }
+  const nums = [...keep].sort((x, y) => x - y);
+  return nums.map((n, i) => (i > 0 && n > nums[i - 1] + 1 ? "…\n" : "") + `${n}\t${lines[n - 1]}`).join("\n");
 }
 
 async function readCited(p: string, bases: string[], guard: (p: string) => Promise<string>) {

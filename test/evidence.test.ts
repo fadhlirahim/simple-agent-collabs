@@ -33,3 +33,10 @@ test("focus keeps the part of a long page that matches the evidence", () => {
   assert.ok(out.length <= 3100);
   assert.match(out, /\$0\.042 per million/);
 });
+
+test("excerpt adds the header row when a cited line is inside a table", async () => {
+  const { excerpt } = await import("../src/evidence.js");
+  const lines = ["# Prices", "", "intro", "", "| Model | In | Out |", "| --- | --- | --- |", "| a | 1 | 2 |", "| b | 3 | 4 |", "| c | 5 | 6 |", "| d | 7 | 8 |", "| e | 9 | 10 |"];
+  const out = excerpt(lines, [[10, 10]]);
+  assert.equal(out, "5\t| Model | In | Out |\n6\t| --- | --- | --- |\n…\n8\t| b | 3 | 4 |\n9\t| c | 5 | 6 |\n10\t| d | 7 | 8 |\n11\t| e | 9 | 10 |");
+});

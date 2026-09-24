@@ -24,6 +24,9 @@ export interface Run {
   ms: number;
   inputTokens: number;
   outputTokens: number;
+  /** Jev only: probability the claim is supported, and certainty of its strength label. */
+  support?: number;
+  certainty?: number;
   error?: string;
 }
 
@@ -64,6 +67,7 @@ export function jevCitationsOnly(client: TypeSafeClient, model = "jev-latest"): 
         ms: performance.now() - t,
         inputTokens: usage.input_tokens,
         outputTokens: usage.output_tokens,
+        support: answers.supports.noul,
       };
     },
   };
@@ -83,6 +87,8 @@ async function throughGate(c: Case, roots: string[], judge: Judge, usage: () => 
     ms: performance.now() - t,
     inputTokens,
     outputTokens,
+    support: g.scores?.support,
+    certainty: g.scores?.certainty,
   };
 }
 

@@ -20,6 +20,8 @@ export interface Gate {
   confidence: Confidence;
   /** Passed, but a human should look. Posted as `Review:` lines. */
   review: string[];
+  /** Jev's raw numbers: probability the sources support the claim, and certainty of the label. */
+  scores?: { support: number; certainty: number };
 }
 
 const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
@@ -109,8 +111,9 @@ export function createJev(api: TypeSafeClient, opts: JevOptions = {}): Decider {
       const support = answers.supports.noul;
       const label = answers.confidence;
       const review: string[] = [];
+      const scores = { support, certainty: label.confidence };
       if (support < rejectBelow) {
-        return { ok: false, reasons: ["the cited sources do not support the claim as stated"], confidence: "low", review };
+        return { ok: false, reasons: ["the cited sources do not support the claim as stated"], confidence: "low", review, scores };
       }
       if (support < sureAt) review.push(`gate unsure the sources support the claim (${support.toFixed(2)})`);
       let confidence = label.choice;
@@ -118,7 +121,7 @@ export function createJev(api: TypeSafeClient, opts: JevOptions = {}): Decider {
         confidence = lowerOf(label.choice, f.confidence);
         review.push(`gate unsure of the confidence level (${label.confidence.toFixed(2)})`);
       }
-      return { ok: true, reasons: [], confidence, review };
+      return { ok: true, reasons: [], confidence, review, scores };
     },
 
     async goalAnswered(goal, summary, findings) {
