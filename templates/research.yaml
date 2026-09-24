@@ -16,9 +16,9 @@ tiers:
 # OpenAI-only alternative (only OPENAI_API_KEY + TYPESAFE_API_KEY needed).
 # Check ids with: curl -s https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY" | grep '"id"'
 # tiers:
-#   fast: openai/gpt-5-mini
-#   standard: openai/gpt-5
-#   powerful: openai/gpt-5
+#   fast: openai/gpt-6-luna      # $0.10/M in
+#   standard: openai/gpt-6-sol   # $2/M in
+#   powerful: openai/gpt-6-astra # $10/M in
 # Model for `sac summarize` (defaults to tiers.standard)
 # summarizer: openai/gpt-5
 
